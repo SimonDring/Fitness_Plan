@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hybrid Training Plan — 12 Month Horizon</title>
+<style>
+/* ===== TYPOGRAPHY — system font stacks, no external fonts ===== */
+:root {
+  --serif: ui-serif, 'Iowan Old Style', 'Apple Garamond', Baskerville, 'Times New Roman', 'Droid Serif', Times, serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --ink: #0e1410;
+  --paper: #f4f1ea;
+  --paper-2: #ebe6db;
+  --rust: #b04a2e;
+  --moss: #4a5d3a;
+  --ochre: #c89a3a;
+  --slate: #2a3a44;
+  --line: #cbc3b3;
+  --muted: #6a665d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(176,74,46,0.05), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(74,93,58,0.04), transparent 40%);
+  min-height: 100vh;
+}
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 32px 120px;
+}
+
+/* HEADER */
+.masthead {
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 18px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 48px;
+}
+.masthead .brand {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  font-style: italic;
+}
+.masthead .meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* HERO */
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 48px;
+  margin-bottom: 64px;
+  align-items: end;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(48px, 7vw, 92px);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--rust);
+}
+.hero .subtitle {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.hero .summary-card {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 28px;
+  border-radius: 2px;
+}
+.hero .summary-card h3 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  color: var(--ochre);
+}
+.hero .summary-card .stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(244,241,234,0.1);
+  font-size: 14px;
+}
+.hero .summary-card .stat:last-child { border-bottom: none; }
+.hero .summary-card .stat span:last-child {
+  font-family: var(--mono);
+  font-weight: 500;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 48px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 50;
+}
+.nav button {
+  background: transparent;
+  border: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 2px;
+}
+.nav button:hover { color: var(--ink); }
+.nav button.active { background: var(--ink); color: var(--paper); }
+
+/* SECTIONS */
+.section { display: none; animation: fadeIn 0.4s ease; }
+.section.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.section-header .num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--rust);
+  letter-spacing: 0.1em;
+}
+.section-header h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 40px;
+  letter-spacing: -0.02em;
+}
+
+/* PROFILE */
+.profile-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 24px;
+  border-radius: 2px;
+}
+.card h4 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 14px;
+}
+.card p { font-size: 14px; margin-bottom: 8px; }
+.card ul { list-style: none; padding: 0; }
+.card li {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.card li:last-child { border-bottom: none; }
+.card li .label { color: var(--muted); }
+.card li .val { font-family: var(--mono); font-size: 12px; text-align: right; }
+.full-row { grid-column: 1 / -1; }
+
+.callout {
+  border-left: 3px solid var(--rust);
+  background: rgba(176,74,46,0.05);
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-radius: 0 2px 2px 0;
+  font-size: 14px;
+}
+.callout strong {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rust);
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* TIMELINE */
+.phase-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 24px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+  align-items: start;
+}
+.phase-row:last-child { border-bottom: none; }
+.phase-row .when {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 8px;
+}
+.phase-row .when .num {
+  font-family: var(--serif);
+  font-size: 36px;
+  color: var(--rust);
+  font-weight: 400;
+  display: block;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-style: italic;
+}
+.phase-row h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.phase-row .tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  margin-right: 6px;
+}
+.phase-row .tag.moss { background: var(--moss); }
+.phase-row .tag.ochre { background: var(--ochre); color: var(--ink); }
+.phase-row .tag.slate { background: var(--slate); }
+.phase-row p { font-size: 14px; margin-bottom: 8px; }
+.phase-row .goals {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 24px;
+  margin-top: 12px;
+}
+.phase-row .goals div {
+  font-size: 13px;
+  padding-left: 14px;
+  position: relative;
+}
+.phase-row .goals div::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--rust);
+}
+
+/* WEEK TABLE */
+.week-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+}
+.week-table th {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 10px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.week-table td {
+  padding: 14px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.week-table tr:last-child td { border-bottom: none; }
+.week-table td:first-child {
+  font-family: var(--mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  width: 110px;
+}
+.week-table .modality {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+/* SESSION DETAIL */
+.session-block {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 24px;
+  margin-bottom: 20px;
+  border-radius: 2px;
+}
+.session-block .header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.session-block h4 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+.session-block .duration {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.session-block .complete-btn {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+.session-block .complete-btn:hover { border-color: var(--ink); color: var(--ink); }
+.session-block .complete-btn.done {
+  background: var(--moss);
+  color: var(--paper);
+  border-color: var(--moss);
+}
+.exercise {
+  display: grid;
+  grid-template-columns: 40px 1fr 110px 110px;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line);
+  align-items: center;
+  font-size: 14px;
+}
+.exercise:last-child { border-bottom: none; }
+.exercise .ex-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--rust);
+  font-weight: 600;
+}
+.exercise .ex-name { font-weight: 500; }
+.exercise .ex-name small {
+  display: block;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.exercise .ex-sets {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: right;
+}
+.exercise .ex-rpe {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 4px 8px;
+  border-radius: 2px;
+  text-align: center;
+}
+.exercise .ex-rpe.swim { background: var(--slate); }
+.exercise .ex-rpe.mobility { background: var(--moss); }
+
+/* DECISION */
+.decision {
+  background: var(--paper-2);
+  border-left: 3px solid var(--slate);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  border-radius: 0 2px 2px 0;
+}
+.decision .scenario {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 8px;
+}
+.decision h4 {
+  font-family: var(--serif);
+  font-size: 18px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.decision .response { font-size: 14px; }
+.decision .response strong {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rust);
+}
+
+/* LOG */
+.log-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.log-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 24px;
+  border-radius: 2px;
+}
+.log-card h4 {
+  font-family: var(--serif);
+  font-size: 20px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.log-card label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+  margin-top: 10px;
+}
+.log-card input, .log-card select, .log-card textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-family: var(--sans);
+  font-size: 14px;
+  border-radius: 2px;
+  color: var(--ink);
+}
+.log-card textarea { min-height: 60px; resize: vertical; font-family: var(--sans); }
+.log-card button {
+  margin-top: 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 12px 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+.log-card button:hover { background: var(--rust); }
+
+.log-history { margin-top: 32px; grid-column: 1 / -1; }
+.log-history h4 { font-family: var(--serif); font-size: 20px; margin-bottom: 16px; font-weight: 600; }
+.log-history table { width: 100%; font-size: 13px; border-collapse: collapse; }
+.log-history th, .log-history td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.log-history th {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: var(--ink);
+  color: var(--paper);
+}
+.log-history td.delete {
+  cursor: pointer;
+  color: var(--rust);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: right;
+}
+.log-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* STATS / CHARTS */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 16px;
+  border-radius: 2px;
+}
+.stat-card .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ochre);
+  margin-bottom: 6px;
+}
+.stat-card .value {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+}
+.stat-card .delta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--paper);
+  opacity: 0.6;
+  margin-top: 6px;
+}
+.stat-card .delta.up { color: #d4a456; }
+.stat-card .delta.down { color: #8fb87c; }
+
+.chart-wrap {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 24px;
+  border-radius: 2px;
+  margin-bottom: 24px;
+}
+.chart-wrap h5 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 16px;
+}
+.chart {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+
+/* PRINCIPLES */
+.principle {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.principle:last-child { border-bottom: none; }
+.principle .icon {
+  font-family: var(--serif);
+  font-size: 36px;
+  color: var(--rust);
+  font-weight: 400;
+  font-style: italic;
+}
+.principle h4 { font-family: var(--serif); font-size: 18px; margin-bottom: 6px; font-weight: 600; }
+.principle p { font-size: 14px; }
+
+/* REASSESS */
+.reassess-q { padding: 16px 0; border-bottom: 1px dashed var(--line); }
+.reassess-q:last-child { border-bottom: none; }
+.reassess-q .qnum {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--rust);
+  letter-spacing: 0.1em;
+}
+.reassess-q p { font-size: 15px; margin-top: 4px; margin-bottom: 8px; }
+.reassess-q textarea {
+  width: 100%;
+  min-height: 50px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-family: var(--sans);
+  font-size: 13px;
+  border-radius: 2px;
+  resize: vertical;
+}
+
+/* EXPORT BAR */
+.export-bar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+.export-bar button {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 14px 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  box-shadow: 0 4px 16px rgba(14,20,16,0.2);
+  transition: all 0.2s;
+}
+.export-bar button:hover { background: var(--rust); transform: translateY(-1px); }
+.export-bar button.secondary { background: var(--paper-2); color: var(--ink); border: 1px solid var(--line); }
+.export-bar button.secondary:hover { background: var(--paper); color: var(--rust); }
+
+footer {
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 2px solid var(--ink);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* SESSION COUNTER PILL */
+.session-counter {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--moss);
+  color: var(--paper);
+  padding: 4px 10px;
+  border-radius: 100px;
+  letter-spacing: 0.1em;
+  margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .app { padding: 20px 16px 100px; }
+  .hero { grid-template-columns: 1fr; gap: 24px; }
+  .profile-grid, .log-grid { grid-template-columns: 1fr; }
+  .phase-row { grid-template-columns: 1fr; gap: 8px; }
+  .phase-row .goals { grid-template-columns: 1fr; }
+  .exercise { grid-template-columns: 30px 1fr; }
+  .exercise .ex-sets, .exercise .ex-rpe { grid-column: 2; text-align: left; }
+  .section-header h2 { font-size: 28px; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .export-bar { bottom: 12px; right: 12px; }
+  .export-bar button { padding: 10px 14px; font-size: 10px; }
+}
+
+@media print {
+  .nav, .export-bar { display: none !important; }
+  .section { display: block !important; page-break-after: always; }
+  body { background: white; }
+  .app { padding: 20px; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<header class="masthead">
+  <div class="brand">Hybrid Athlete Programme</div>
+  <div class="meta">v1.1 · 12-Mo Horizon · Wks 5–56</div>
+</header>
+
+<section class="hero">
+  <div>
+    <div class="subtitle">Personalised long-term plan</div>
+    <h1>Built to <em>last</em>,<br>not to <em>peak</em>.</h1>
+  </div>
+  <div class="summary-card">
+    <h3>Athlete · At a glance</h3>
+    <div class="stat"><span>Age</span><span>28</span></div>
+    <div class="stat"><span>Bodyweight</span><span>80 kg ±2</span></div>
+    <div class="stat"><span>Primary anchor</span><span>1:40 half · Dec '26</span></div>
+    <div class="stat"><span>Swim target</span><span>2.5 km continuous</span></div>
+    <div class="stat"><span>Ski-ready by</span><span>Nov '26</span></div>
+    <div class="stat"><span>Gym days/wk</span><span>4 (Mon/Tue/Thu/Fri)</span></div>
+    <div class="stat"><span>Watch flag</span><span>Left patellar tendon</span></div>
+  </div>
+</section>
+
+<nav class="nav">
+  <button class="active" data-target="profile">01 Profile</button>
+  <button data-target="overview">02 Overview</button>
+  <button data-target="phase1">03 Phase 1</button>
+  <button data-target="decisions">04 Decisions</button>
+  <button data-target="principles">05 Principles</button>
+  <button data-target="log">06 Track & Log</button>
+  <button data-target="reassess">07 Reassess</button>
+</nav>
+
+<!-- 01 PROFILE -->
+<section class="section active" id="profile">
+  <div class="section-header"><span class="num">§ 01</span><h2>Athlete profile</h2></div>
+  <div class="profile-grid">
+    <div class="card">
+      <h4>Physical baseline</h4>
+      <ul>
+        <li><span class="label">Age / BW</span><span class="val">28 / 80 kg</span></li>
+        <li><span class="label">Squat (top set)</span><span class="val">75–80 kg × 5 · RPE 6–7</span></li>
+        <li><span class="label">Bench (top set)</span><span class="val">50 kg · RPE 7</span></li>
+        <li><span class="label">Hex deadlift</span><span class="val">70–75 kg · RPE 6–7</span></li>
+        <li><span class="label">Continuous swim</span><span class="val">~200 m to gassed</span></li>
+        <li><span class="label">Sleep</span><span class="val">7–8 h, stable</span></li>
+        <li><span class="label">Recovery</span><span class="val">Good</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Injury status</h4>
+      <ul>
+        <li><span class="label">Left patellar tendon</span><span class="val">Mild, improving</span></li>
+        <li><span class="label">Right knee (post-marathon)</span><span class="val">Resolved</span></li>
+        <li><span class="label">Acute injuries</span><span class="val">None</span></li>
+        <li><span class="label">Reverse Nordic response</span><span class="val">Positive — keep</span></li>
+      </ul>
+      <div class="callout">
+        <strong>Watchpoint</strong>
+        Patellar tendon work stays in permanently — load management tool, not rehab phase. Loaded lengthened-position quad work (reverse Nordics, tempo split squats) weekly.
+      </div>
+    </div>
+    <div class="card">
+      <h4>Goals — ranked</h4>
+      <ul>
+        <li><span class="label">1 · Primary anchor</span><span class="val">1:40 half · Dec '26</span></li>
+        <li><span class="label">2 · Swim milestone</span><span class="val">2.5 km continuous</span></li>
+        <li><span class="label">3 · Ski readiness</span><span class="val">Nov '26</span></li>
+        <li><span class="label">4 · Through-line</span><span class="val">Cardio + functional strength for life</span></li>
+        <li><span class="label">Stretch</span><span class="val">1:35 half if run block lands</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Lifestyle constraints</h4>
+      <ul>
+        <li><span class="label">Gym days</span><span class="val">Mon/Tue/Thu/Fri</span></li>
+        <li><span class="label">Saturday</span><span class="val">Golf (flex day)</span></li>
+        <li><span class="label">Pool size</span><span class="val">20 m</span></li>
+        <li><span class="label">Recovery</span><span class="val">Sauna / steam / spa</span></li>
+        <li><span class="label">June</span><span class="val">Few days off (minor)</span></li>
+        <li><span class="label">October</span><span class="val">10 days Africa — deload</span></li>
+        <li><span class="label">Big variable</span><span class="val">Move abroad in 2–3 mo</span></li>
+      </ul>
+    </div>
+    <div class="card full-row">
+      <h4>Motivational profile</h4>
+      <p>High intrinsic adherence. Thrives on 6–8 week blocks with measurable mini-goals. Heavy Mon leg day mentally preferred — hardest session done first. Welcomes variety <em>between</em> blocks, not within. Open to training aids (pull buoy, paddles) — deployed in Phase 1 swim work. Fiancée trains alongside in pool at weekends, recovering from disc protrusion — shared sessions are an adherence asset, especially through the relocation window.</p>
+    </div>
+    <div class="card full-row">
+      <h4>Tensions resolved</h4>
+      <ul>
+        <li><span class="label">"Min running" vs. 1:40 half</span><span class="val">Bounded run build from Wk 13 · 1:40 anchor</span></li>
+        <li><span class="label">Aerobic health vs. 4 gym days</span><span class="val">Swim is primary Z2 driver until run ramps</span></li>
+        <li><span class="label">Strength vs. endurance</span><span class="val">2× strength minimum, always</span></li>
+        <li><span class="label">Move disruption risk</span><span class="val">Portable phase fallbacks built in (§04)</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 02 OVERVIEW -->
+<section class="section" id="overview">
+  <div class="section-header"><span class="num">§ 02</span><h2>12-month phase overview</h2></div>
+  <p style="margin-bottom: 24px; max-width: 720px; font-size: 15px;">Five phases over twelve months. Phases run 6–10 weeks each. Every 4th week is a deload — non-negotiable, calendared. Progression is gated by outcome criteria, not the calendar — miss a gate, consolidate, don't advance.</p>
+
+  <div class="phase-row">
+    <div class="when"><span class="num">01</span>Wks 5–12<br>~8 wks</div>
+    <div>
+      <h3>Foundation Consolidation</h3>
+      <span class="tag">Strength</span><span class="tag moss">Swim tech</span><span class="tag ochre">Aerobic base</span>
+      <p>Lock in technical movement quality before chasing load. Swim is technique-first: drills, breathing, single-arm, paddles &amp; pull buoy. Strength shifts to a true upper/lower split. Aerobic work stays in the pool — <em>no running yet</em>.</p>
+      <div class="goals">
+        <div>Swim 1 km continuous comfortably</div>
+        <div>Squat 5RM @ RPE 8 → ~95 kg</div>
+        <div>Bench 5RM @ RPE 8 → ~62.5 kg</div>
+        <div>Patellar: zero daily sensitivity</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="when"><span class="num">02</span>Wks 13–20<br>~8 wks</div>
+    <div>
+      <h3>Run Re-entry · Swim Build</h3>
+      <span class="tag">Strength maint.</span><span class="tag moss">Swim volume</span><span class="tag ochre">Run reentry</span>
+      <p>Carefully reintroduce running — starting &lt;15 km/wk, capped progression. Swim volume climbs (tech → endurance). Strength: 2 sessions, maintenance loading. Highest-injury-risk phase — guardrails tight.</p>
+      <div class="goals">
+        <div>Run 5 km continuous Z2</div>
+        <div>Swim 1.5 km continuous</div>
+        <div>Maintain Phase 1 strength PRs</div>
+        <div>Knee: still asymptomatic</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="when"><span class="num">03</span>Wks 21–30<br>~10 wks</div>
+    <div>
+      <h3>Run Specificity · Half Build</h3>
+      <span class="tag">Strength 2×</span><span class="tag moss">Swim maint.</span><span class="tag ochre">Run focus</span>
+      <p>Running becomes the leading modality. Z2 long run, tempo, one quality session weekly. Swim drops to 1 quality + 1 easy. Strength holds at 2×/wk, heavy &amp; brief. Bridges over the move — relocation likely falls here.</p>
+      <div class="goals">
+        <div>Half TT: sub-1:45</div>
+        <div>Run volume peak ~35 km/wk</div>
+        <div>Swim 2.5 km milestone hit</div>
+        <div>Strength preserved within 5%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="when"><span class="num">04</span>Wks 31–40<br>~10 wks</div>
+    <div>
+      <h3>Pre-Ski + Half Peak</h3>
+      <span class="tag slate">Hybrid peak</span><span class="tag ochre">Ski prep</span>
+      <p>Ski-specific lower body work (lateral, eccentric, isometric quad). Running tapers into half marathon target ~Wks 38–40. Includes October Africa deload — calendared.</p>
+      <div class="goals">
+        <div>Half marathon · 1:40 (stretch 1:35)</div>
+        <div>Single-leg squat: 5 reps controlled</div>
+        <div>Ski lateral: 60s wall sits + skaters</div>
+        <div>Stay healthy through taper</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="when"><span class="num">05</span>Wks 41–56<br>~16 wks</div>
+    <div>
+      <h3>Ski Season · Maintain · Reassess</h3>
+      <span class="tag moss">Off-season</span><span class="tag">Maintain</span>
+      <p>Ski season is active recovery for legs but heavy use. Plan flips: upper-body strength bias + swim + Z2 maintenance. 12-week reassessment at Wk 56 sets year-2 anchors.</p>
+      <div class="goals">
+        <div>Ski safely, no acute injury</div>
+        <div>Maintain swim 2 km/wk minimum</div>
+        <div>Strength: hold within 10% of peak</div>
+        <div>Year-2 anchor goals selected</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Why phases not weeks</strong>
+    A week-by-week plan written 12 months out is fiction. Phase architecture means your actual response to training, the move timing, and life events drive progression — the plan adapts to you. Detailed prescription is provided one phase at a time; the next phase is written from your actual data, not assumptions made today.
+  </div>
+</section>
+
+<!-- 03 PHASE 1 -->
+<section class="section" id="phase1">
+  <div class="section-header"><span class="num">§ 03</span><h2>Phase 1 · Foundation</h2></div>
+  <p style="margin-bottom: 16px; max-width: 760px;"><strong>Wks 5–12 · 8 weeks.</strong> Wk 8 is deload. Outcome gates at end of Wk 12 determine progression to Phase 2.</p>
+
+  <div class="callout">
+    <strong>Why this shape</strong>
+    Technique-limited in the pool, not fitness-limited. Under-loaded in the gym with headroom. Running base dormant but recoverable. Phase 1 fixes the swim and builds a true strength foundation before adding running — which is where injury risk concentrates. No running yet. By design.
+  </div>
+
+  <h3 style="font-family: var(--serif); font-size: 24px; margin: 32px 0 12px; font-weight: 600;">Weekly structure</h3>
+  <table class="week-table">
+    <thead><tr><th>Day</th><th>Session</th><th>Focus</th><th>Duration</th></tr></thead>
+    <tbody>
+      <tr><td>Mon AM</td><td><span class="modality">Strength</span>Lower body (heavy)</td><td>Squat, posterior chain, knee health</td><td>60–70 min</td></tr>
+      <tr><td>Tue AM</td><td><span class="modality">Strength</span>Upper body (push/pull)</td><td>Horizontal + vertical, bench focus</td><td>55–65 min</td></tr>
+      <tr><td>Tue PM*</td><td><span class="modality">Swim</span>Technique — short</td><td>Drills + easy 1.2–1.6 km</td><td>40–45 min</td></tr>
+      <tr><td>Wed</td><td><span class="modality">Active rec.</span>Walk / mobility / sauna</td><td>Parasympathetic recovery</td><td>30–40 min</td></tr>
+      <tr><td>Thu AM</td><td><span class="modality">Strength</span>Lower body (athletic)</td><td>Unilateral, posterior chain, tendon</td><td>55–65 min</td></tr>
+      <tr><td>Thu PM</td><td><span class="modality">Swim</span>Endurance build</td><td>Continuous + interval mix</td><td>45–55 min</td></tr>
+      <tr><td>Fri AM</td><td><span class="modality">Strength</span>Upper + conditioning</td><td>Pull focus, 8–10 min finisher</td><td>55–65 min</td></tr>
+      <tr><td>Sat</td><td><span class="modality">Flex</span>Golf <em>or</em> swim w/ fiancée</td><td>Whatever life allows</td><td>—</td></tr>
+      <tr><td>Sun</td><td><span class="modality">Off / mob.</span>Off or 20-min mobility</td><td>Reverse Nordic, hip flow, t-spine</td><td>0–25 min</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size: 12px; color: var(--muted); margin-top: -16px;">* optional but high-value — technique gains compound</p>
+
+  <h3 style="font-family: var(--serif); font-size: 24px; margin: 40px 0 16px; font-weight: 600;">Session detail</h3>
+
+  <div class="session-block">
+    <div class="header-row">
+      <h4>Monday · Lower (heavy)</h4>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <span class="duration">60–70 min · RPE peak 8</span>
+        <button class="complete-btn" data-session="mon">Mark complete</button>
+      </div>
+    </div>
+    <div class="exercise"><div class="ex-num">A1</div><div class="ex-name">Back squat <small>+2.5 kg/wk if last set RPE ≤7</small></div><div class="ex-sets">4 × 5</div><div class="ex-rpe">RPE 7→8</div></div>
+    <div class="exercise"><div class="ex-num">B1</div><div class="ex-name">Romanian deadlift <small>controlled, slight knee bend, hinge</small></div><div class="ex-sets">3 × 8</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">C1</div><div class="ex-name">Reverse Nordic <small>permanent fixture — knee health</small></div><div class="ex-sets">3 × 6–8</div><div class="ex-rpe mobility">Quality</div></div>
+    <div class="exercise"><div class="ex-num">C2</div><div class="ex-name">Single-leg calf raise <small>3 sec down, 1 sec up</small></div><div class="ex-sets">3 × 12 ea.</div><div class="ex-rpe mobility">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">D1</div><div class="ex-name">Pallof press <small>core anti-rotation</small></div><div class="ex-sets">3 × 10 ea.</div><div class="ex-rpe mobility">RPE 6</div></div>
+    <div class="exercise"><div class="ex-num">D2</div><div class="ex-name">90/90 hip flow <small>cooldown / mobility</small></div><div class="ex-sets">2 min</div><div class="ex-rpe mobility">Easy</div></div>
+  </div>
+
+  <div class="session-block">
+    <div class="header-row">
+      <h4>Tuesday · Upper (push/pull)</h4>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <span class="duration">55–65 min · RPE peak 8</span>
+        <button class="complete-btn" data-session="tue">Mark complete</button>
+      </div>
+    </div>
+    <div class="exercise"><div class="ex-num">A1</div><div class="ex-name">Bench press <small>2 sec eccentric · +1.25–2.5 kg/wk @ RPE ≤7</small></div><div class="ex-sets">4 × 5</div><div class="ex-rpe">RPE 7→8</div></div>
+    <div class="exercise"><div class="ex-num">A2</div><div class="ex-name">Chest-supported row <small>squeeze 1 sec</small></div><div class="ex-sets">4 × 8</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">B1</div><div class="ex-name">Standing DB shoulder press</div><div class="ex-sets">3 × 8</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">B2</div><div class="ex-name">Lat pulldown <small>or pull-ups w/ band</small></div><div class="ex-sets">3 × 10</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">C1</div><div class="ex-name">Face pull <small>shoulder health, swim posture</small></div><div class="ex-sets">3 × 15</div><div class="ex-rpe mobility">RPE 6</div></div>
+    <div class="exercise"><div class="ex-num">C2</div><div class="ex-name">Thoracic ext. on roller</div><div class="ex-sets">2 × 60 s</div><div class="ex-rpe mobility">Easy</div></div>
+  </div>
+
+  <div class="session-block">
+    <div class="header-row">
+      <h4>Tuesday PM · Swim technique</h4>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <span class="duration">40–45 min · 20 m pool</span>
+        <button class="complete-btn" data-session="tue-pm">Mark complete</button>
+      </div>
+    </div>
+    <div class="exercise"><div class="ex-num">W1</div><div class="ex-name">Warm-up easy free <small>long body line</small></div><div class="ex-sets">10 × 20 m</div><div class="ex-rpe swim">Easy</div></div>
+    <div class="exercise"><div class="ex-num">W2</div><div class="ex-name">Catch-up drill <small>one hand waits at front until the other catches — forces high elbow</small></div><div class="ex-sets">6 × 20 m</div><div class="ex-rpe swim">Drill</div></div>
+    <div class="exercise"><div class="ex-num">W3</div><div class="ex-name">Single-arm free <small>3 strokes one side / 3 the other</small></div><div class="ex-sets">6 × 20 m</div><div class="ex-rpe swim">Drill</div></div>
+    <div class="exercise"><div class="ex-num">W4</div><div class="ex-name">Pull-buoy swim <small>removes legs — isolates upper body technique</small></div><div class="ex-sets">8 × 20 m</div><div class="ex-rpe swim">Easy</div></div>
+    <div class="exercise"><div class="ex-num">W5</div><div class="ex-name">Bilateral breathing <small>every 3 strokes the whole length</small></div><div class="ex-sets">6 × 20 m</div><div class="ex-rpe swim">Easy</div></div>
+    <div class="exercise"><div class="ex-num">W6</div><div class="ex-name">Cool-down</div><div class="ex-sets">4 × 20 m</div><div class="ex-rpe swim">Easy</div></div>
+  </div>
+
+  <div class="session-block">
+    <div class="header-row">
+      <h4>Thursday · Lower (athletic)</h4>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <span class="duration">55–65 min · RPE peak 8</span>
+        <button class="complete-btn" data-session="thu">Mark complete</button>
+      </div>
+    </div>
+    <div class="exercise"><div class="ex-num">A1</div><div class="ex-name">Trap-bar / hex deadlift <small>explosive intent — your current variation</small></div><div class="ex-sets">4 × 4</div><div class="ex-rpe">RPE 7→8</div></div>
+    <div class="exercise"><div class="ex-num">B1</div><div class="ex-name">Bulgarian split squat <small>3 sec down, knee tracks toe</small></div><div class="ex-sets">3 × 8 ea.</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">B2</div><div class="ex-name">Single-leg hip thrust</div><div class="ex-sets">3 × 10 ea.</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">C1</div><div class="ex-name">Copenhagen plank <small>adductor — anti-injury skiing &amp; running</small></div><div class="ex-sets">3 × 20–30 s ea.</div><div class="ex-rpe mobility">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">C2</div><div class="ex-name">Hamstring slider curl</div><div class="ex-sets">3 × 8</div><div class="ex-rpe mobility">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">D1</div><div class="ex-name">Spanish squat hold <small>tendon-friendly isometric quad</small></div><div class="ex-sets">3 × 30 s</div><div class="ex-rpe mobility">RPE 7</div></div>
+  </div>
+
+  <div class="session-block">
+    <div class="header-row">
+      <h4>Thursday PM · Swim endurance build</h4>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <span class="duration">45–55 min · ≈ 1.4–1.8 km</span>
+        <button class="complete-btn" data-session="thu-pm">Mark complete</button>
+      </div>
+    </div>
+    <div class="exercise"><div class="ex-num">W1</div><div class="ex-name">Warm-up easy free</div><div class="ex-sets">10 × 20 m</div><div class="ex-rpe swim">Easy</div></div>
+    <div class="exercise"><div class="ex-num">W2</div><div class="ex-name">Drill set: catch-up + single-arm</div><div class="ex-sets">6 × 20 m</div><div class="ex-rpe swim">Drill</div></div>
+    <div class="exercise"><div class="ex-num">W3</div><div class="ex-name">Main set · build over weeks <small>Wk5–6: 5×60m · Wk7: 4×80m · Wk8 deload · Wk9: 3×100m · Wk10: 2×140m · Wk11: 2×200m · Wk12: 1×500m TT</small></div><div class="ex-sets">see note</div><div class="ex-rpe swim">RPE 6</div></div>
+    <div class="exercise"><div class="ex-num">W4</div><div class="ex-name">Pull-buoy bonus <small>technique under fatigue</small></div><div class="ex-sets">6 × 20 m</div><div class="ex-rpe swim">Easy</div></div>
+    <div class="exercise"><div class="ex-num">W5</div><div class="ex-name">Cool-down</div><div class="ex-sets">4 × 20 m</div><div class="ex-rpe swim">Easy</div></div>
+  </div>
+
+  <div class="session-block">
+    <div class="header-row">
+      <h4>Friday · Upper + conditioning finisher</h4>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <span class="duration">55–65 min · RPE peak 8</span>
+        <button class="complete-btn" data-session="fri">Mark complete</button>
+      </div>
+    </div>
+    <div class="exercise"><div class="ex-num">A1</div><div class="ex-name">Weighted pull-up <small>or assisted to RPE 8</small></div><div class="ex-sets">4 × 5</div><div class="ex-rpe">RPE 7→8</div></div>
+    <div class="exercise"><div class="ex-num">A2</div><div class="ex-name">Incline DB press</div><div class="ex-sets">4 × 8</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">B1</div><div class="ex-name">Single-arm DB row</div><div class="ex-sets">3 × 10 ea.</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">B2</div><div class="ex-name">DB lateral raise</div><div class="ex-sets">3 × 12</div><div class="ex-rpe">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">C1</div><div class="ex-name">Hanging knee raise</div><div class="ex-sets">3 × 10</div><div class="ex-rpe mobility">RPE 7</div></div>
+    <div class="exercise"><div class="ex-num">FIN</div><div class="ex-name">Conditioning · pick one <small>10 min · low-impact — no running</small><br><small>· Assault bike: 30s hard / 30s easy × 10</small><br><small>· Ski erg: 30s hard / 30s easy × 10</small><br><small>· Rower: 250 m × 6 on 2 min</small></div><div class="ex-sets">10 min</div><div class="ex-rpe">Z3–Z4</div></div>
+  </div>
+
+  <h3 style="font-family: var(--serif); font-size: 24px; margin: 40px 0 16px; font-weight: 600;">Progression rules</h3>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <h4>Loading via RPE</h4>
+    <ul>
+      <li><span class="label">Last working set RPE ≤ 7</span><span class="val">+2.5 kg next session (lower) / +1.25–2.5 kg (upper)</span></li>
+      <li><span class="label">Last working set RPE 8</span><span class="val">Hold load, repeat next session</span></li>
+      <li><span class="label">Last working set RPE 9+</span><span class="val">Drop 5%, rebuild — something's off</span></li>
+      <li><span class="label">Two sessions RPE 9+ in a row</span><span class="val">Auto-deload week, don't wait for Wk 8</span></li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <h4>Deload — Wk 8</h4>
+    <p style="font-size: 14px;">Reduce sets by 1 across the board, drop load to 70% of recent working weights, keep swim at Tue/Thu but cut volume by 30%. Saturday and Sunday off completely. Mandatory whether or not you feel you need it — connective tissue adaptation lags muscular adaptation by weeks.</p>
+  </div>
+
+  <div class="card">
+    <h4>Phase 1 → Phase 2 gates (end Wk 12)</h4>
+    <ul>
+      <li><span class="label">Swim 1 km continuous</span><span class="val">Required</span></li>
+      <li><span class="label">No knee symptoms in daily life</span><span class="val">Required</span></li>
+      <li><span class="label">Squat 5RM ≥ 90 kg @ RPE ≤ 8</span><span class="val">Target</span></li>
+      <li><span class="label">Bench 5RM ≥ 60 kg @ RPE ≤ 8</span><span class="val">Target</span></li>
+      <li><span class="label">Sleep &amp; recovery stable</span><span class="val">Required</span></li>
+    </ul>
+    <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">Miss a "Required" gate → consolidate (repeat Wks 9–12 with technique focus). Miss "Target" only → advance to Phase 2 with lighter loading start.</p>
+  </div>
+
+  <h3 style="font-family: var(--serif); font-size: 24px; margin: 40px 0 16px; font-weight: 600;">Nutrition guardrails</h3>
+  <div class="card">
+    <p style="font-size: 14px; margin-bottom: 12px;">Not a meal plan — three habits to lock in. These compound through every later phase.</p>
+    <ul>
+      <li><span class="label">Pre-gym breakfast (M/T/Th/F)</span><span class="val">25–40 g carb + 20–30 g protein, 60–90 min pre</span></li>
+      <li><span class="label">Pre-evening-swim fuel</span><span class="val">Dinner by 6 PM <em>or</em> "snack-dinner" at 5:30, full meal post-swim</span></li>
+      <li><span class="label">Post-session within 60 min</span><span class="val">30–40 g protein + carbs</span></li>
+    </ul>
+    <div class="callout" style="margin-top: 16px;">
+      <strong>The swim digestion problem</strong>
+      Dinner at 6:30 PM then swim at 8:15 isn't going to feel good — 90 min isn't enough for a full meal. Either eat earlier and lighter, or split dinner: small portion before, larger portion after the swim. Post-swim refeed is when most of the recovery happens anyway.
+    </div>
+  </div>
+</section>
+
+<!-- 04 DECISIONS -->
+<section class="section" id="decisions">
+  <div class="section-header"><span class="num">§ 04</span><h2>Decision framework</h2></div>
+  <p style="margin-bottom: 24px; max-width: 720px;">If/then logic for the disruptions most likely to hit. Make the decision once, here, before you're tired and tempted to wing it.</p>
+
+  <div class="decision">
+    <div class="scenario">Scenario A · Patellar tendon flare</div>
+    <h4>Left knee sensitivity returns to "noticeable in daily life"</h4>
+    <p class="response">Drop squat &amp; lunge loads 25% for 1 week. Replace Bulgarian split squats with Spanish squats &amp; ISO holds. <strong>Do not stop training</strong> — load management beats rest. Reverse Nordics stay regardless.<br><strong>Decision rule</strong> · Pain ≤3/10 during activity, gone within 24h = train modified. Pain &gt;3/10 or lingering &gt;24h = see physio.</p>
+  </div>
+
+  <div class="decision">
+    <div class="scenario">Scenario B · Two weeks limited / no gym</div>
+    <h4>Hotel gym only, or no gym at all</h4>
+    <p class="response">3× per week minimum, even bodyweight only. Hotel: keep 4-day structure with DB substitutes. No gym: 3× full-body bodyweight (push-up variants, single-leg squats, hinges with backpack load, pull-ups if a bar's anywhere). Swim if available. <em>One missed week recoverable. Two weeks of nothing isn't.</em><br><strong>Decision rule</strong> · Re-entry = drop loads 10% week 1 back, normal by week 2.</p>
+  </div>
+
+  <div class="decision">
+    <div class="scenario">Scenario C · Strength plateau (3+ weeks no progress)</div>
+    <h4>Loads stuck despite RPE ≤8</h4>
+    <p class="response">Almost always recovery or technique, rarely capacity. First: audit sleep &amp; nutrition. Second: introduce one rep/set variation (e.g. 4×5 → 5×3 for two weeks). Third: real deload week. Only fourth: change the exercise.<br><strong>Decision rule</strong> · Don't chase load before checking inputs.</p>
+  </div>
+
+  <div class="decision">
+    <div class="scenario">Scenario D · Move abroad happens mid-phase</div>
+    <h4>Relocation falls in any phase</h4>
+    <p class="response">Two-week "transition protocol": maintenance only. 3 strength (full-body), 2 swims if pool, walking for aerobic. Once new gym/pool sorted, audit equipment &amp; revise next phase. Don't try to keep the existing programme intact through a move — that's how injuries happen.<br><strong>Decision rule</strong> · Honesty about timing &gt; pretending nothing changed.</p>
+  </div>
+
+  <div class="decision">
+    <div class="scenario">Scenario E · Sleep &lt;7h average for 7+ days</div>
+    <h4>Work crunch, jet lag, life</h4>
+    <p class="response">Cap all sessions at RPE 7 until sleep recovers. Skip Fri finisher. Keep showing up — consistency over intensity. Don't try to "make up" sessions with weekend volume.<br><strong>Decision rule</strong> · Adaptation = recovery. Insufficient recovery + same training = injury.</p>
+  </div>
+
+  <div class="decision">
+    <div class="scenario">Scenario F · Running ramp triggers shin/calf/knee pain</div>
+    <h4>Any lower limb pain on consecutive runs (Phase 2+)</h4>
+    <p class="response">One missed run = OK to push through. Two consecutive sessions with same-location pain = stop running 7 days, replace with swim or bike. Re-enter at 50% of last week's volume. <em>Running injuries hit hardest because people ignore the first signal.</em><br><strong>Decision rule</strong> · 10%/wk increase max. Hard ceiling 40 km/wk this year.</p>
+  </div>
+
+  <div class="decision">
+    <div class="scenario">Scenario G · Golf wipes out Saturday</div>
+    <h4>Played 18, knackered, no swim</h4>
+    <p class="response">Fine. Saturday is flex — golf priority is built in. Don't try to "make up" the missed swim midweek. The week is balanced without it.<br><strong>Decision rule</strong> · If you played golf or trained, the day counted. Week doesn't need rescuing.</p>
+  </div>
+</section>
+
+<!-- 05 PRINCIPLES -->
+<section class="section" id="principles">
+  <div class="section-header"><span class="num">§ 05</span><h2>Operating principles</h2></div>
+  <p style="margin-bottom: 24px; max-width: 720px;">The non-negotiables. When you forget what to do, these tell you what to do.</p>
+
+  <div class="principle"><div class="icon">i.</div><div><h4>Tendons set the ceiling</h4><p>Muscle adapts in weeks, connective tissue in months. Every progression rule is paced to the slower system — your tendons. Patellar work is permanent. Tempo eccentrics in every block. You will lift less than you "could" short-term to keep lifting for the next 30 years.</p></div></div>
+  <div class="principle"><div class="icon">ii.</div><div><h4>Two strength sessions per week, always</h4><p>No matter the phase, no matter how much running or swimming, no matter how busy. Two real strength sessions or you start losing the asset that makes everything else possible.</p></div></div>
+  <div class="principle"><div class="icon">iii.</div><div><h4>Mobility is non-optional</h4><p>Reverse Nordic, hip flow, t-spine. These aren't finishers. They're load. The picking-the-kids-up-without-stiffness goal lives or dies on this work.</p></div></div>
+  <div class="principle"><div class="icon">iv.</div><div><h4>Aerobic base serves longevity first</h4><p>Z2 capacity is the through-line — cardiac health, cognitive function, metabolic flexibility. The half marathon is downstream of this, not the point. Build the engine for the next 50 years, not December.</p></div></div>
+  <div class="principle"><div class="icon">v.</div><div><h4>Run volume has hard ceilings</h4><p>10%/week increase max. 40 km/wk hard cap year one. Most adult runners get injured ignoring these — no upside in being the exception.</p></div></div>
+  <div class="principle"><div class="icon">vi.</div><div><h4>Mandatory deload every 4th week</h4><p>Whether you feel you need it or not. The point of the deload is that you don't see the need until you've missed one and broken down. Calendared, not negotiated.</p></div></div>
+  <div class="principle"><div class="icon">vii.</div><div><h4>Adaptation = stimulus + recovery</h4><p>Both halves matter. If sleep/stress/nutrition drop, training output drops automatically. Not weakness. How the system works. Use the decision rules.</p></div></div>
+  <div class="principle"><div class="icon">viii.</div><div><h4>Saturday is flex, forever</h4><p>Golf is part of who you are. The plan supports the life, not the other way. Never pretend Saturday is mandatory.</p></div></div>
+</section>
+
+<!-- 06 LOG -->
+<section class="section" id="log">
+  <div class="section-header"><span class="num">§ 06</span><h2>Track &amp; log</h2></div>
+  <p style="margin-bottom: 24px; max-width: 720px;">Five weekly metrics. Logged once a week, two minutes. This drives the next phase's prescription — without data, the plan can't adapt. All data saves locally in your browser; nothing leaves this device.</p>
+
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card"><div class="label">Weeks logged</div><div class="value" id="stat-weeks">0</div><div class="delta">Total entries</div></div>
+    <div class="stat-card"><div class="label">Latest BW</div><div class="value" id="stat-bw">—</div><div class="delta" id="stat-bw-delta">vs. baseline</div></div>
+    <div class="stat-card"><div class="label">Latest RHR</div><div class="value" id="stat-rhr">—</div><div class="delta" id="stat-rhr-delta">vs. 4-wk avg</div></div>
+    <div class="stat-card"><div class="label">Avg sleep</div><div class="value" id="stat-sleep">—</div><div class="delta">Last 4 wks</div></div>
+    <div class="stat-card"><div class="label">Sessions done</div><div class="value" id="stat-sessions">0</div><div class="delta">This week</div></div>
+  </div>
+
+  <div class="chart-wrap">
+    <h5>Trends · Bodyweight & Resting HR</h5>
+    <canvas class="chart" id="chart-bw" width="1000" height="180"></canvas>
+  </div>
+
+  <div class="chart-wrap">
+    <h5>Trends · Sleep score & Knee rating</h5>
+    <canvas class="chart" id="chart-sleep" width="1000" height="180"></canvas>
+  </div>
+
+  <div class="log-grid">
+    <div class="log-card">
+      <h4>Weekly check-in</h4>
+      <label>Week ending (date)</label>
+      <input type="date" id="log-date">
+      <label>Bodyweight (kg)</label>
+      <input type="number" step="0.1" id="log-bw" placeholder="e.g. 80.2">
+      <label>Resting HR (bpm · morning, lying)</label>
+      <input type="number" id="log-rhr" placeholder="e.g. 56">
+      <label>Avg session RPE this week (1–10)</label>
+      <input type="number" step="0.1" min="1" max="10" id="log-rpe" placeholder="e.g. 7.5">
+      <label>Sleep score this week (1–10)</label>
+      <input type="number" step="0.1" min="1" max="10" id="log-sleep" placeholder="e.g. 8">
+      <label>Knee rating (0 = nothing · 10 = severe)</label>
+      <input type="number" step="0.5" min="0" max="10" id="log-knee" placeholder="e.g. 1">
+      <label>Notes (optional)</label>
+      <textarea id="log-notes" placeholder="Anything worth flagging..."></textarea>
+      <button onclick="saveLog()">Save week</button>
+    </div>
+
+    <div class="log-card">
+      <h4>What each metric tells us</h4>
+      <p style="font-size: 13px; margin-bottom: 12px;"><strong>Bodyweight</strong> — trend, not single readings. Drift &gt;2 kg over 4 weeks unintended = nutrition audit.</p>
+      <p style="font-size: 13px; margin-bottom: 12px;"><strong>Resting HR</strong> — earliest-warning recovery metric. RHR up 5+ bpm vs. 4-wk baseline = under-recovered. Auto-reduce intensity.</p>
+      <p style="font-size: 13px; margin-bottom: 12px;"><strong>Session RPE</strong> — average across the week. Drifting up while loads stay = recovery deficit.</p>
+      <p style="font-size: 13px; margin-bottom: 12px;"><strong>Sleep score</strong> — honest gut number, not a watch number. Two weeks &lt;7 = sleep audit, cap intensity.</p>
+      <p style="font-size: 13px;"><strong>Knee rating</strong> — track every week even when zero. A 0→2 drift over 3 weeks is the earliest tendon overload signal — catch it here, not after the flare.</p>
+    </div>
+
+    <div class="log-history">
+      <h4>History</h4>
+      <table id="log-table">
+        <thead><tr><th>Week</th><th>BW</th><th>RHR</th><th>RPE</th><th>Sleep</th><th>Knee</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+      <div class="log-empty" id="log-empty">No entries yet. Log your first week above.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 REASSESS -->
+<section class="section" id="reassess">
+  <div class="section-header"><span class="num">§ 07</span><h2>Quarterly reassessment</h2></div>
+  <p style="margin-bottom: 24px; max-width: 760px;">Every 12 weeks, sit with these. Honest answers drive the next phase. Set a reminder for end of Wk 12, 24, 36, 48. Answers save locally as you type.</p>
+
+  <div class="card" style="margin-bottom: 24px;">
+    <h4>Performance &amp; body</h4>
+    <div class="reassess-q"><span class="qnum">Q1</span><p>Current 5RM-equivalent loads on squat, deadlift, bench? How did they change this quarter?</p><textarea data-q="q1"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q2</span><p>Longest continuous swim distance, at what perceived effort?</p><textarea data-q="q2"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q3</span><p>If running — longest comfortable Z2 run, at what pace?</p><textarea data-q="q3"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q4</span><p>Body composition shift (eyeballed, not obsessed)?</p><textarea data-q="q4"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q5</span><p>Niggles? Where, when, what makes them worse, what helps?</p><textarea data-q="q5"></textarea></div>
+  </div>
+
+  <div class="card" style="margin-bottom: 24px;">
+    <h4>Recovery &amp; lifestyle</h4>
+    <div class="reassess-q"><span class="qnum">Q6</span><p>Average sleep this quarter? Anything compromising it?</p><textarea data-q="q6"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q7</span><p>Nutrition adherence — pre-workout breakfast, post-swim refeed?</p><textarea data-q="q7"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q8</span><p>Stress load — work, travel, relationships?</p><textarea data-q="q8"></textarea></div>
+  </div>
+
+  <div class="card" style="margin-bottom: 24px;">
+    <h4>Adherence &amp; response</h4>
+    <div class="reassess-q"><span class="qnum">Q9</span><p>% of prescribed sessions completed?</p><textarea data-q="q9"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q10</span><p>Most-looked-forward-to sessions? Grind sessions?</p><textarea data-q="q10"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q11</span><p>Exercises being quietly avoided?</p><textarea data-q="q11"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q12</span><p>What did I learn about my body that I didn't know at the start?</p><textarea data-q="q12"></textarea></div>
+  </div>
+
+  <div class="card" style="margin-bottom: 24px;">
+    <h4>Goals &amp; context</h4>
+    <div class="reassess-q"><span class="qnum">Q13</span><p>Anchor goals still right? Anything to add or drop?</p><textarea data-q="q13"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q14</span><p>Move status &amp; next-12-weeks access picture?</p><textarea data-q="q14"></textarea></div>
+    <div class="reassess-q"><span class="qnum">Q15</span><p>One change you'd make to the last 12 weeks?</p><textarea data-q="q15"></textarea></div>
+  </div>
+
+  <div class="callout">
+    <strong>Bring it back</strong>
+    At quarter-end, paste your answers back to the coach — next phase rebuilt from your actual data, not assumptions from 12 weeks ago.
+  </div>
+</section>
+
+<footer>
+  <span>Designed for sustainable long-term progression</span>
+  <span id="footer-phase">Phase 1 active · Wks 5–12</span>
+</footer>
+
+</div> <!-- /app -->
+
+<div class="export-bar">
+  <button class="secondary" onclick="exportJSON()">Export data</button>
+  <button class="secondary" onclick="document.getElementById('import-file').click()">Import data</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+  <button onclick="window.print()">Print / PDF</button>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   PERSISTENT STORAGE — localStorage only, no external deps
+   ============================================================ */
+const STORAGE_KEYS = {
+  logs: 'htp_logs_v1',
+  sessions: 'htp_sessions_v1',
+  reassess: 'htp_reassess_v1',
+  meta: 'htp_meta_v1'
+};
+
+function load(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    console.warn('Load failed for', key, e);
+    return fallback;
+  }
+}
+function save(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    alert('Could not save — local storage may be full or disabled in this browser.');
+    return false;
+  }
+}
+
+let logs = load(STORAGE_KEYS.logs, []);
+let sessions = load(STORAGE_KEYS.sessions, {});
+let reassess = load(STORAGE_KEYS.reassess, {});
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const buttons = document.querySelectorAll('.nav button');
+const sections = document.querySelectorAll('.section');
+buttons.forEach(b => b.addEventListener('click', () => {
+  buttons.forEach(x => x.classList.remove('active'));
+  sections.forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById(b.dataset.target).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}));
+
+/* ============================================================
+   WEEKLY LOG
+   ============================================================ */
+function refreshLogTable() {
+  const tbody = document.getElementById('log-tbody');
+  const empty = document.getElementById('log-empty');
+  const table = document.getElementById('log-table');
+  tbody.innerHTML = '';
+  if (logs.length === 0) {
+    empty.style.display = 'block';
+    table.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  table.style.display = 'table';
+  const sorted = [...logs].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  sorted.forEach(l => {
+    const realIdx = logs.indexOf(l);
+    const row = document.createElement('tr');
+    const note = l.notes ? (l.notes.length > 40 ? l.notes.substring(0, 40) + '…' : l.notes) : '—';
+    row.innerHTML = `
+      <td>${escapeHtml(l.date || '—')}</td>
+      <td>${escapeHtml(l.bw || '—')}</td>
+      <td>${escapeHtml(l.rhr || '—')}</td>
+      <td>${escapeHtml(l.rpe || '—')}</td>
+      <td>${escapeHtml(l.sleep || '—')}</td>
+      <td>${escapeHtml(l.knee || '—')}</td>
+      <td>${escapeHtml(note)}</td>
+      <td class="delete" data-idx="${realIdx}">delete</td>
+    `;
+    tbody.appendChild(row);
+  });
+  tbody.querySelectorAll('.delete').forEach(td => {
+    td.addEventListener('click', () => deleteLog(parseInt(td.dataset.idx)));
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[c]);
+}
+
+function saveLog() {
+  const date = document.getElementById('log-date').value;
+  if (!date) { alert('Please set the week-ending date.'); return; }
+  const entry = {
+    date: date,
+    bw: document.getElementById('log-bw').value,
+    rhr: document.getElementById('log-rhr').value,
+    rpe: document.getElementById('log-rpe').value,
+    sleep: document.getElementById('log-sleep').value,
+    knee: document.getElementById('log-knee').value,
+    notes: document.getElementById('log-notes').value
+  };
+  logs.push(entry);
+  save(STORAGE_KEYS.logs, logs);
+  refreshLogTable();
+  refreshStats();
+  drawCharts();
+  ['log-bw', 'log-rhr', 'log-rpe', 'log-sleep', 'log-knee', 'log-notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+function deleteLog(idx) {
+  if (!confirm('Delete this entry?')) return;
+  logs.splice(idx, 1);
+  save(STORAGE_KEYS.logs, logs);
+  refreshLogTable();
+  refreshStats();
+  drawCharts();
+}
+
+/* ============================================================
+   STATS BAR
+   ============================================================ */
+function refreshStats() {
+  document.getElementById('stat-weeks').textContent = logs.length;
+
+  const sorted = [...logs].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const latest = sorted[sorted.length - 1];
+  const first = sorted[0];
+
+  if (latest) {
+    document.getElementById('stat-bw').textContent = latest.bw || '—';
+    if (first && latest !== first && first.bw && latest.bw) {
+      const diff = (parseFloat(latest.bw) - parseFloat(first.bw)).toFixed(1);
+      const el = document.getElementById('stat-bw-delta');
+      el.textContent = (diff >= 0 ? '+' : '') + diff + ' kg vs. baseline';
+      el.className = 'delta ' + (Math.abs(diff) > 2 ? 'up' : '');
+    }
+    document.getElementById('stat-rhr').textContent = latest.rhr || '—';
+
+    const last4 = sorted.slice(-4);
+    const sleepNums = last4.map(l => parseFloat(l.sleep)).filter(n => !isNaN(n));
+    if (sleepNums.length) {
+      const avg = (sleepNums.reduce((a, b) => a + b, 0) / sleepNums.length).toFixed(1);
+      document.getElementById('stat-sleep').textContent = avg;
+    }
+
+    if (sorted.length >= 5 && latest.rhr) {
+      const prior4 = sorted.slice(-5, -1).map(l => parseFloat(l.rhr)).filter(n => !isNaN(n));
+      if (prior4.length) {
+        const avg = prior4.reduce((a, b) => a + b, 0) / prior4.length;
+        const diff = (parseFloat(latest.rhr) - avg).toFixed(1);
+        const el = document.getElementById('stat-rhr-delta');
+        el.textContent = (diff >= 0 ? '+' : '') + diff + ' vs. 4-wk avg';
+        el.className = 'delta ' + (diff >= 5 ? 'up' : '');
+      }
+    }
+  }
+
+  const today = new Date();
+  const dayOfWeek = (today.getDay() + 6) % 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - dayOfWeek);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  const weekSessions = Object.entries(sessions).filter(([key, v]) => {
+    if (!v) return false;
+    const parts = key.split('-');
+    if (parts.length < 4) return false;
+    const datePart = parts.slice(1).join('-');
+    const d = new Date(datePart);
+    return d >= monday && d <= sunday;
+  });
+  document.getElementById('stat-sessions').textContent = weekSessions.length;
+}
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+function drawCharts() {
+  drawChart('chart-bw', logs, ['bw', 'rhr'], ['#b04a2e', '#2a3a44'], ['BW (kg)', 'RHR (bpm)']);
+  drawChart('chart-sleep', logs, ['sleep', 'knee'], ['#4a5d3a', '#c89a3a'], ['Sleep /10', 'Knee /10']);
+}
+
+function drawChart(canvasId, data, keys, colors, labels) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = 180;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.height = cssH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const sorted = [...data].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  if (sorted.length < 2) {
+    ctx.fillStyle = '#6a665d';
+    ctx.font = '12px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'center';
+    ctx.fillText('Log at least 2 weeks to see trends', cssW / 2, cssH / 2);
+    return;
+  }
+
+  const pad = { l: 40, r: 80, t: 16, b: 24 };
+  const w = cssW - pad.l - pad.r;
+  const h = cssH - pad.t - pad.b;
+
+  ctx.strokeStyle = '#cbc3b3';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t);
+  ctx.lineTo(pad.l, pad.t + h);
+  ctx.lineTo(pad.l + w, pad.t + h);
+  ctx.stroke();
+
+  keys.forEach((key, ki) => {
+    const points = sorted.map(d => parseFloat(d[key])).filter(n => !isNaN(n));
+    if (points.length < 2) return;
+    const min = Math.min(...points);
+    const max = Math.max(...points);
+    const range = max - min || 1;
+    const yMin = min - range * 0.15;
+    const yMax = max + range * 0.15;
+
+    ctx.strokeStyle = colors[ki];
+    ctx.fillStyle = colors[ki];
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    let drawn = 0;
+    sorted.forEach((d, i) => {
+      const v = parseFloat(d[key]);
+      if (isNaN(v)) return;
+      const x = pad.l + (i / (sorted.length - 1)) * w;
+      const y = pad.t + h - ((v - yMin) / (yMax - yMin)) * h;
+      if (drawn === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+      drawn++;
+    });
+    ctx.stroke();
+
+    sorted.forEach((d, i) => {
+      const v = parseFloat(d[key]);
+      if (isNaN(v)) return;
+      const x = pad.l + (i / (sorted.length - 1)) * w;
+      const y = pad.t + h - ((v - yMin) / (yMax - yMin)) * h;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.fillStyle = colors[ki];
+    ctx.fillRect(pad.l + w + 12, pad.t + ki * 18, 10, 10);
+    ctx.fillStyle = '#0e1410';
+    ctx.font = '11px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'left';
+    ctx.fillText(labels[ki], pad.l + w + 26, pad.t + ki * 18 + 9);
+  });
+
+  ctx.fillStyle = '#6a665d';
+  ctx.font = '10px ' + getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = 'center';
+  const showLabels = [0, Math.floor((sorted.length - 1) / 2), sorted.length - 1];
+  showLabels.forEach(i => {
+    const x = pad.l + (i / (sorted.length - 1)) * w;
+    const d = sorted[i].date || '';
+    const short = d.length >= 10 ? d.substring(5) : d;
+    ctx.fillText(short, x, pad.t + h + 16);
+  });
+}
+
+/* ============================================================
+   SESSION COMPLETE BUTTONS
+   ============================================================ */
+function getWeekKey(sessionId) {
+  const today = new Date();
+  const iso = today.toISOString().substring(0, 10);
+  return sessionId + '-' + iso;
+}
+
+function refreshSessionButtons() {
+  document.querySelectorAll('.complete-btn').forEach(btn => {
+    const sid = btn.dataset.session;
+    const key = getWeekKey(sid);
+    if (sessions[key]) {
+      btn.classList.add('done');
+      btn.textContent = '✓ Done today';
+    } else {
+      btn.classList.remove('done');
+      btn.textContent = 'Mark complete';
+    }
+  });
+}
+
+document.querySelectorAll('.complete-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sid = btn.dataset.session;
+    const key = getWeekKey(sid);
+    if (sessions[key]) {
+      delete sessions[key];
+    } else {
+      sessions[key] = true;
+    }
+    save(STORAGE_KEYS.sessions, sessions);
+    refreshSessionButtons();
+    refreshStats();
+  });
+});
+
+/* ============================================================
+   REASSESSMENT — auto-save on input
+   ============================================================ */
+document.querySelectorAll('[data-q]').forEach(ta => {
+  const qid = ta.dataset.q;
+  if (reassess[qid]) ta.value = reassess[qid];
+  ta.addEventListener('input', () => {
+    reassess[qid] = ta.value;
+    save(STORAGE_KEYS.reassess, reassess);
+  });
+});
+
+/* ============================================================
+   IMPORT / EXPORT
+   ============================================================ */
+function exportJSON() {
+  const data = {
+    version: 1,
+    exported: new Date().toISOString(),
+    logs: logs,
+    sessions: sessions,
+    reassess: reassess
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hybrid-training-data-' + new Date().toISOString().substring(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!confirm('This will replace your current logs, session checkmarks, and reassessment answers. Continue?')) return;
+      if (data.logs) { logs = data.logs; save(STORAGE_KEYS.logs, logs); }
+      if (data.sessions) { sessions = data.sessions; save(STORAGE_KEYS.sessions, sessions); }
+      if (data.reassess) {
+        reassess = data.reassess;
+        save(STORAGE_KEYS.reassess, reassess);
+        document.querySelectorAll('[data-q]').forEach(ta => {
+          if (reassess[ta.dataset.q]) ta.value = reassess[ta.dataset.q];
+        });
+      }
+      refreshLogTable();
+      refreshStats();
+      drawCharts();
+      refreshSessionButtons();
+      alert('Imported successfully.');
+    } catch (err) {
+      alert('Could not import — file is not valid JSON.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+refreshLogTable();
+refreshStats();
+refreshSessionButtons();
+
+document.getElementById('log-date').valueAsDate = new Date();
+
+const drawIfVisible = () => {
+  if (document.getElementById('log').classList.contains('active')) {
+    drawCharts();
+  }
+};
+document.querySelectorAll('.nav button').forEach(b => {
+  b.addEventListener('click', () => setTimeout(drawIfVisible, 100));
+});
+window.addEventListener('resize', () => setTimeout(drawIfVisible, 200));
+drawCharts();
+</script>
+</body>
+</html>
