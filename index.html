@@ -1,0 +1,4186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0e1410">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hybrid">
+<title>Hybrid · Training Plan</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e1410'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Georgia,serif' font-size='32' fill='%23c89a3a' font-style='italic'%3Eh%3C/text%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+  --serif: ui-serif, 'Iowan Old Style', 'Apple Garamond', Baskerville, 'Times New Roman', 'Droid Serif', Times, serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --ink: #0e1410;
+  --paper: #f4f1ea;
+  --paper-2: #ebe6db;
+  --paper-3: #ddd6c5;
+  --rust: #b04a2e;
+  --moss: #4a5d3a;
+  --ochre: #c89a3a;
+  --slate: #2a3a44;
+  --line: #cbc3b3;
+  --muted: #6a665d;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --topbar-h: 52px;
+  --tabbar-h: 60px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: var(--ink);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* ============================================================
+   APP SHELL — fixed top bar, fixed bottom tab, scrollable screens
+   ============================================================ */
+.app {
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 0 40px rgba(14,20,16,0.15);
+  overflow: hidden;
+}
+
+/* TOP BAR */
+.topbar {
+  flex-shrink: 0;
+  padding-top: var(--safe-top);
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  z-index: 100;
+  position: relative;
+}
+.topbar-inner {
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+}
+.topbar.elevated { box-shadow: 0 2px 8px rgba(14,20,16,0.06); }
+
+.btn-back, .btn-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.btn-back:active, .btn-icon:active { background: var(--paper-2); }
+.btn-back svg, .btn-icon svg { width: 22px; height: 22px; }
+
+.topbar-title {
+  flex: 1;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+.topbar-title.has-back { text-align: center; }
+.topbar-spacer { width: 40px; }
+
+/* SCREEN STACK */
+.stack {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+}
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 15% 8%, rgba(176,74,46,0.04), transparent 50%),
+    radial-gradient(circle at 85% 90%, rgba(74,93,58,0.03), transparent 50%);
+  will-change: transform;
+  transform: translateX(0);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0.2, 1);
+  padding-bottom: calc(40px + var(--safe-bottom));
+}
+.screen.enter-from-right { transform: translateX(100%); }
+.screen.exit-to-right { transform: translateX(100%); }
+.screen.exit-to-left { transform: translateX(-20%); opacity: 0.5; }
+
+.screen-pad {
+  padding: 20px 18px 24px;
+}
+
+/* TAB BAR */
+.tabbar {
+  flex-shrink: 0;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  padding-bottom: var(--safe-bottom);
+  z-index: 100;
+  box-shadow: 0 -2px 12px rgba(14,20,16,0.04);
+}
+.tabbar-inner {
+  height: var(--tabbar-h);
+  display: flex;
+}
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 6px 4px;
+  transition: color 0.15s;
+  position: relative;
+}
+.tab svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.tab span {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.tab.active { color: var(--ink); }
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 2px;
+  background: var(--rust);
+  border-radius: 0 0 2px 2px;
+}
+.tab:active { background: var(--paper-2); }
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+.h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin-bottom: 6px;
+}
+.h1 em { font-style: italic; color: var(--rust); }
+.h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  margin: 24px 0 12px;
+}
+.h3 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin: 20px 0 10px;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+/* CARDS */
+.card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 12px;
+}
+.card-dark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.card-dark .eyebrow { color: var(--ochre); }
+
+/* LIST CARDS */
+.list-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.15s;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+}
+.list-card:active { transform: scale(0.985); background: var(--paper-3); }
+.list-card .icon-wrap {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.list-card .icon-wrap svg { width: 20px; height: 20px; stroke-width: 1.8; }
+.list-card .lc-body { flex: 1; min-width: 0; }
+.list-card .lc-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.list-card .lc-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-card .lc-chev {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.list-card .lc-chev svg { width: 16px; height: 16px; }
+
+/* HOME DASHBOARD */
+.dash-greeting {
+  margin-bottom: 18px;
+}
+.dash-status {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 16px 18px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+.dash-status .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ochre);
+  margin-bottom: 8px;
+}
+.dash-status .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.dash-status .phase-name {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+}
+.dash-status .week-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  background: rgba(244,241,234,0.12);
+  padding: 5px 10px;
+  border-radius: 100px;
+  text-transform: uppercase;
+}
+.dash-progress {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(244,241,234,0.1);
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-family: var(--mono);
+}
+.dash-progress .stat { display: flex; flex-direction: column; gap: 2px; }
+.dash-progress .stat .v { font-family: var(--serif); font-size: 20px; color: var(--paper); }
+.dash-progress .stat .l { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(244,241,234,0.5); }
+
+/* QUICK ACTIONS */
+.quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.quick-tile {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  transition: transform 0.1s;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.quick-tile:active { transform: scale(0.97); }
+.quick-tile .qt-icon { color: var(--rust); margin-bottom: 8px; }
+.quick-tile .qt-icon svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.quick-tile .qt-title { font-family: var(--serif); font-size: 16px; font-weight: 600; line-height: 1.15; }
+.quick-tile .qt-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.05em; }
+
+/* SECONDARY LINKS */
+.sec-links {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.sec-link {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.sec-link:last-child { border-bottom: none; }
+.sec-link:active { background: var(--paper-3); }
+.sec-link .sl-chev { color: var(--muted); }
+.sec-link .sl-chev svg { width: 16px; height: 16px; }
+
+/* INFO LIST (key:value) */
+.kv-list {
+  list-style: none;
+}
+.kv-list li {
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13.5px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.kv-list li:last-child { border-bottom: none; }
+.kv-list .k { color: var(--muted); flex-shrink: 1; }
+.kv-list .v { font-family: var(--mono); font-size: 12px; text-align: right; flex-shrink: 0; }
+
+/* CALLOUTS */
+.callout {
+  border-left: 3px solid var(--rust);
+  background: rgba(176,74,46,0.06);
+  padding: 12px 14px;
+  margin: 14px 0;
+  border-radius: 0 8px 8px 0;
+  font-size: 13.5px;
+}
+.callout strong {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--rust);
+  display: block;
+  margin-bottom: 4px;
+}
+.callout.amber { border-left-color: var(--ochre); background: rgba(200,154,58,0.08); }
+.callout.amber strong { color: var(--ochre); }
+.callout.slate { border-left-color: var(--slate); background: rgba(42,58,68,0.06); }
+.callout.slate strong { color: var(--slate); }
+
+/* PHASE / WEEK CARDS (training screens) */
+.phase-tile {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  transition: transform 0.1s;
+}
+.phase-tile:active { transform: scale(0.985); }
+.phase-tile .pt-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.phase-tile .pt-num {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-style: italic;
+  color: var(--rust);
+  line-height: 0.9;
+}
+.pt-status {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 100px;
+}
+.pt-status.current { color: var(--paper); background: var(--moss); }
+.pt-status.provisional { color: var(--ochre); background: rgba(200,154,58,0.13); }
+.phase-tile .pt-title { font-family: var(--serif); font-size: 19px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.01em; }
+.phase-tile .pt-range { font-family: var(--mono); font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.phase-tile .pt-desc { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.45; }
+.phase-tile .pt-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+/* WEEK GRID */
+.week-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.week-tile {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  transition: transform 0.1s;
+  min-height: 100px;
+}
+.week-tile:active { transform: scale(0.97); }
+.week-tile .wt-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--rust); margin-bottom: 3px; }
+.week-tile.deload .wt-tag { color: var(--ochre); }
+.week-tile .wt-num { font-family: var(--serif); font-size: 28px; font-weight: 600; line-height: 1; }
+.week-tile .wt-theme { font-size: 11.5px; color: var(--muted); margin-top: 6px; line-height: 1.3; }
+.week-tile .wt-progress { margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.week-tile .wt-bar { flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.week-tile .wt-bar-fill { height: 100%; background: var(--moss); transition: width 0.3s; }
+
+/* SESSION BLOCK */
+.session {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.session-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.session-head h4 { font-family: var(--serif); font-size: 17px; font-weight: 600; }
+.session-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.session-meta .dur { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.btn-complete {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 100px;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.btn-complete.done { background: var(--moss); color: var(--paper); border-color: var(--moss); }
+.btn-complete:active { transform: scale(0.96); }
+
+.exercise {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+  align-items: start;
+  font-size: 13.5px;
+}
+.exercise:last-child { border-bottom: none; }
+.exercise .e-num { font-family: var(--mono); font-size: 10px; color: var(--rust); font-weight: 600; padding-top: 2px; }
+.exercise .e-name { font-weight: 500; min-width: 0; }
+.exercise .e-name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.exercise .e-meta { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.exercise .e-sets { font-family: var(--mono); font-size: 11px; }
+.exercise .e-rpe { font-family: var(--mono); font-size: 9.5px; background: var(--ink); color: var(--paper); padding: 3px 7px; border-radius: 4px; letter-spacing: 0.04em; }
+.exercise .e-rpe.swim { background: var(--slate); }
+.exercise .e-rpe.mobility { background: var(--moss); }
+.exercise .e-rpe.run { background: var(--rust); }
+
+/* DECISIONS */
+.decision-card {
+  background: var(--paper-2);
+  border-left: 3px solid var(--slate);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: 0 10px 10px 0;
+}
+.decision-card .scen { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--slate); margin-bottom: 5px; }
+.decision-card h4 { font-family: var(--serif); font-size: 16px; margin-bottom: 7px; font-weight: 600; line-height: 1.25; }
+.decision-card p { font-size: 13px; }
+.decision-card .rule { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--rust); display: block; margin-top: 6px; }
+
+/* PRINCIPLES */
+.principle {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.principle:last-child { border-bottom: none; }
+.principle .roman { font-family: var(--serif); font-size: 26px; color: var(--rust); font-style: italic; line-height: 1; padding-top: 2px; }
+.principle h4 { font-family: var(--serif); font-size: 16px; margin-bottom: 4px; font-weight: 600; }
+.principle p { font-size: 13.5px; }
+
+/* TRACKING — stats grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.stat-card {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px;
+  border-radius: 12px;
+}
+.stat-card .l { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ochre); margin-bottom: 4px; }
+.stat-card .v { font-family: var(--serif); font-size: 24px; line-height: 1; }
+.stat-card .d { font-family: var(--mono); font-size: 9.5px; color: rgba(244,241,234,0.6); margin-top: 5px; }
+.stat-card .d.up { color: #d4a456; }
+.stat-card .d.down { color: #8fb87c; }
+
+/* CHARTS */
+.chart-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+.chart-card h5 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--rust); margin-bottom: 10px; }
+.chart-canvas { width: 100%; height: 160px; display: block; }
+.chart-filter { display: flex; gap: 4px; margin-bottom: 12px; }
+.chart-filter button { background: var(--paper); border: 1px solid var(--line); padding: 6px 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 100px; color: var(--muted); }
+.chart-filter button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* FORMS */
+.form-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.form-row { margin-bottom: 12px; }
+.form-row:last-child { margin-bottom: 0; }
+.form-row label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.form-row input, .form-row textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-family: var(--sans);
+  font-size: 16px;
+  border-radius: 8px;
+  color: var(--ink);
+}
+.form-row textarea { min-height: 72px; resize: vertical; font-family: var(--sans); }
+.btn-primary {
+  width: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+.btn-primary:active { background: var(--rust); }
+.btn-secondary {
+  width: 100%;
+  background: var(--paper-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.btn-secondary:active { background: var(--paper-3); }
+.btn-danger { color: var(--rust); border-color: var(--rust); }
+
+/* LOG TABLE */
+.log-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.log-table th, .log-table td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+.log-table th { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); background: var(--paper-3); }
+.log-table td.del { color: var(--rust); text-align: right; cursor: pointer; font-family: var(--mono); font-size: 14px; padding: 8px 4px; }
+
+/* REASSESS */
+.reassess-section { margin-bottom: 16px; }
+.reassess-q { padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.reassess-q:last-child { border-bottom: none; }
+.reassess-q .qnum { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--rust); }
+.reassess-q p { font-size: 13.5px; margin: 4px 0 6px; }
+.reassess-q textarea {
+  width: 100%; min-height: 48px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-family: var(--sans);
+  font-size: 13px;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+/* SETTINGS */
+.settings-section { margin-bottom: 18px; }
+.settings-section h3 { padding-left: 4px; }
+.settings-group {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.settings-row {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row:active { background: var(--paper-3); }
+.settings-row.danger { color: var(--rust); }
+.settings-row .sr-meta { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+
+.empty {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 13.5px;
+}
+
+/* SESSION CARDS (Week Detail calendar view) */
+.ses-list { display: flex; flex-direction: column; gap: 8px; }
+.ses-card {
+  display: grid;
+  grid-template-columns: 80px 1fr 18px;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink);
+  transition: transform 0.1s, background 0.15s;
+  width: 100%;
+}
+.ses-card:active { transform: scale(0.985); background: var(--paper-3); }
+.ses-card.is-done { border-color: var(--moss); background: rgba(74,93,58,0.06); }
+.ses-card.is-started { border-color: var(--rust); background: rgba(176,74,46,0.05); }
+.ses-day {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rust);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.ses-card.is-done .ses-day { color: var(--moss); }
+.ses-body { min-width: 0; }
+.ses-focus {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ses-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.ses-dur { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.ses-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: var(--paper-3);
+  color: var(--muted);
+}
+.ses-badge.done { background: var(--moss); color: var(--paper); }
+.ses-badge.in-progress { background: var(--rust); color: var(--paper); }
+.ses-chev { color: var(--muted); display: flex; align-items: center; }
+.ses-chev svg { width: 14px; height: 14px; }
+
+/* RATING BUTTONS (1–5 scale) */
+.rating-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.rating-btn {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 0;
+  cursor: pointer;
+  border-radius: 8px;
+  color: var(--ink);
+  transition: all 0.1s;
+  min-height: 44px;
+}
+.rating-btn:active { transform: scale(0.94); }
+.rating-btn.selected {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+/* OVERVIEW timeline */
+.phase-row { display: grid; grid-template-columns: 70px 1fr; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.phase-row:last-child { border-bottom: none; }
+.phase-row .when { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.phase-row .when .num { font-family: var(--serif); font-size: 26px; color: var(--rust); font-style: italic; display: block; line-height: 1; margin-bottom: 4px; }
+.phase-row h3 { font-family: var(--serif); font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+.phase-row .tags { margin-bottom: 6px; }
+.phase-row .tag { display: inline-block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 6px; background: var(--ink); color: var(--paper); border-radius: 3px; margin-right: 4px; margin-bottom: 4px; }
+.phase-row .tag.moss { background: var(--moss); }
+.phase-row .tag.ochre { background: var(--ochre); color: var(--ink); }
+.phase-row .tag.slate { background: var(--slate); }
+.phase-row p { font-size: 13px; }
+
+/* ===================================================================
+   V4 DESIGN UPGRADE — premium fitness-app feel
+   Cascades over earlier rules. Existing class names preserved.
+   =================================================================== */
+
+/* ---------- THEME TOKENS ---------- */
+:root {
+  /* Spacing scale (4-based) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+  --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 40px; --s-9: 48px;
+  /* Radius */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 22px; --r-full: 999px;
+  /* Shadows — soft, warm */
+  --shadow-sm: 0 1px 2px rgba(14,20,16,0.04), 0 1px 4px rgba(14,20,16,0.04);
+  --shadow-md: 0 2px 6px rgba(14,20,16,0.06), 0 4px 16px rgba(14,20,16,0.05);
+  --shadow-lg: 0 8px 32px rgba(14,20,16,0.10);
+  --shadow-inset: inset 0 0 0 1px rgba(14,20,16,0.04);
+  /* Surfaces */
+  --bg-app: #f4f1ea;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f9f6ef;
+  --bg-surface-elev: #ffffff;
+  --bg-ink: #0e1410;
+  --bg-tab: rgba(244,241,234,0.92);
+  --txt-strong: #0e1410;
+  --txt-body: #2a2a25;
+  --txt-muted: #6a665d;
+  --txt-soft: #918c81;
+  --hairline: rgba(14,20,16,0.08);
+  --hairline-strong: rgba(14,20,16,0.12);
+  --topbar-h: 56px;
+  --tabbar-h: 68px;
+}
+
+/* Dark theme — same warm identity, deeper surfaces */
+html[data-theme="dark"] {
+  --bg-app: #14110d;
+  --bg-surface: #1d1a16;
+  --bg-surface-2: #232017;
+  --bg-surface-elev: #26221c;
+  --bg-ink: #0a0907;
+  --bg-tab: rgba(20,17,13,0.92);
+  --txt-strong: #f4f1ea;
+  --txt-body: #e8e2d4;
+  --txt-muted: #a8a195;
+  --txt-soft: #807a6f;
+  --hairline: rgba(244,241,234,0.06);
+  --hairline-strong: rgba(244,241,234,0.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* Auto-detect dark preference if user hasn't chosen */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    --bg-app: #14110d;
+    --bg-surface: #1d1a16;
+    --bg-surface-2: #232017;
+    --bg-surface-elev: #26221c;
+    --bg-ink: #0a0907;
+    --bg-tab: rgba(20,17,13,0.92);
+    --txt-strong: #f4f1ea;
+    --txt-body: #e8e2d4;
+    --txt-muted: #a8a195;
+    --txt-soft: #807a6f;
+    --hairline: rgba(244,241,234,0.06);
+    --hairline-strong: rgba(244,241,234,0.1);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 2px 6px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  }
+}
+
+/* ---------- BASE OVERRIDES ---------- */
+html, body {
+  background: var(--bg-app);
+  color: var(--txt-body);
+  font-size: 16px;
+  line-height: 1.5;
+  font-feature-settings: 'ss01', 'cv11';
+}
+body { font-variant-numeric: tabular-nums; }
+
+.app {
+  background: var(--bg-app);
+  box-shadow: none;
+}
+@media (min-width: 640px) {
+  .app { box-shadow: var(--shadow-lg); }
+}
+
+/* ---------- TOP BAR ---------- */
+.topbar {
+  background: var(--bg-tab);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--hairline);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.topbar.elevated {
+  border-bottom-color: var(--hairline-strong);
+  box-shadow: 0 1px 0 var(--hairline);
+}
+.topbar-inner { height: var(--topbar-h); padding: 0 var(--s-3); }
+.topbar-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--txt-strong);
+  letter-spacing: -0.005em;
+}
+.btn-back, .btn-icon {
+  width: 38px; height: 38px;
+  color: var(--txt-strong);
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-back:active, .btn-icon:active {
+  background: var(--bg-surface-2);
+  transform: scale(0.92);
+}
+.btn-back svg, .btn-icon svg { width: 20px; height: 20px; }
+
+/* ---------- SCREEN STACK / TRANSITIONS ---------- */
+.screen {
+  background: var(--bg-app);
+  background-image: none;
+  transition: transform 0.32s cubic-bezier(0.28, 0.84, 0.42, 1), opacity 0.32s ease;
+  padding-bottom: calc(var(--s-9) + var(--safe-bottom));
+}
+.screen.exit-to-left {
+  transform: translateX(-16%) scale(0.98);
+  opacity: 0.4;
+}
+.screen-pad { padding: var(--s-6) var(--s-5) var(--s-8); }
+
+/* ---------- TAB BAR ---------- */
+.tabbar {
+  background: var(--bg-tab);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--hairline);
+  box-shadow: none;
+}
+.tabbar-inner { height: var(--tabbar-h); }
+.tab {
+  gap: 4px;
+  color: var(--txt-soft);
+  padding: 8px 6px;
+  position: relative;
+  transition: color 0.15s;
+}
+.tab:active { background: transparent; transform: scale(0.94); }
+.tab svg { width: 24px; height: 24px; stroke-width: 1.75; z-index: 1; }
+.tab span {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  z-index: 1;
+}
+.tab.active { color: var(--txt-strong); }
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 30px;
+  background: var(--bg-surface-2);
+  border-radius: var(--r-full);
+  z-index: 0;
+}
+html[data-theme="dark"] .tab.active::before { background: rgba(244,241,234,0.06); }
+
+/* ---------- TYPOGRAPHY ---------- */
+.h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(36px, 9vw, 48px);
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+  color: var(--txt-strong);
+  margin-bottom: var(--s-2);
+}
+.h1 em { color: var(--rust); }
+.h2 {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--txt-strong);
+  margin: var(--s-7) 0 var(--s-3);
+}
+.h3 {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--txt-muted);
+  margin: var(--s-6) 0 var(--s-3);
+}
+.eyebrow {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: var(--s-2);
+}
+.sub {
+  color: var(--txt-muted);
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: var(--s-5);
+}
+
+/* ---------- CARDS ---------- */
+.card {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  padding: var(--s-5) var(--s-5);
+  margin-bottom: var(--s-3);
+  box-shadow: var(--shadow-sm);
+}
+.card h4 { color: var(--rust); }
+.card-dark {
+  background: var(--bg-ink);
+  color: #f4f1ea;
+}
+.card-dark .eyebrow { color: var(--ochre); }
+
+.list-card {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  padding: var(--s-4) var(--s-5);
+  margin-bottom: var(--s-2);
+  box-shadow: var(--shadow-sm);
+  min-height: 68px;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+.list-card:active {
+  transform: scale(0.98);
+  background: var(--bg-surface);
+  box-shadow: none;
+}
+.list-card .icon-wrap {
+  width: 44px; height: 44px;
+  background: var(--bg-ink);
+  color: #f4f1ea;
+  border-radius: var(--r-md);
+}
+.list-card .icon-wrap svg { width: 22px; height: 22px; }
+.list-card .lc-title { font-size: 16px; color: var(--txt-strong); }
+.list-card .lc-desc { font-size: 13px; color: var(--txt-muted); margin-top: 3px; white-space: normal; }
+.list-card .lc-chev { color: var(--txt-soft); }
+.list-card .lc-chev svg { width: 18px; height: 18px; }
+
+/* ---------- HOME DASHBOARD ---------- */
+.dash-greeting { margin-bottom: var(--s-6); }
+.dash-greeting .eyebrow { color: var(--txt-muted); margin-bottom: var(--s-3); }
+
+/* Today card — the big lead element */
+.today-card {
+  background: linear-gradient(135deg, var(--bg-ink) 0%, #1a201b 100%);
+  color: #f4f1ea;
+  padding: var(--s-6);
+  border-radius: var(--r-xl);
+  margin-bottom: var(--s-4);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+.today-card::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(200,154,58,0.18), transparent 70%);
+  pointer-events: none;
+}
+.today-eyebrow {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ochre);
+  margin-bottom: var(--s-3);
+}
+.today-title {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin-bottom: var(--s-2);
+}
+.today-meta {
+  font-size: 13px;
+  color: rgba(244,241,234,0.65);
+  font-family: var(--mono);
+  margin-bottom: var(--s-4);
+}
+.today-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ochre);
+  color: var(--bg-ink);
+  padding: 12px 18px;
+  border-radius: var(--r-full);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.today-cta:active { transform: scale(0.96); }
+.today-cta.done { background: rgba(244,241,234,0.12); color: #f4f1ea; }
+.today-cta svg { width: 16px; height: 16px; }
+
+/* Stats strip — 3 prominent metrics */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
+}
+.stats-strip .stat-tile {
+  background: var(--bg-surface);
+  padding: var(--s-4) var(--s-3);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+.stats-strip .stat-tile .l {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--txt-muted);
+  margin-bottom: 6px;
+}
+.stats-strip .stat-tile .v {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--txt-strong);
+  letter-spacing: -0.02em;
+}
+.stats-strip .stat-tile .d {
+  font-size: 11px;
+  color: var(--txt-soft);
+  margin-top: 4px;
+  font-family: var(--mono);
+}
+
+/* Streak ring */
+.streak-card {
+  background: var(--bg-surface);
+  border-radius: var(--r-lg);
+  padding: var(--s-4) var(--s-5);
+  margin-bottom: var(--s-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+.streak-ring {
+  position: relative;
+  width: 56px; height: 56px;
+  flex-shrink: 0;
+}
+.streak-ring svg { transform: rotate(-90deg); }
+.streak-ring .ring-bg { fill: none; stroke: var(--hairline); stroke-width: 5; }
+.streak-ring .ring-fg { fill: none; stroke: var(--rust); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+.streak-ring .ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--txt-strong);
+}
+.streak-body { flex: 1; min-width: 0; }
+.streak-title { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--txt-strong); }
+.streak-sub { font-size: 12.5px; color: var(--txt-muted); margin-top: 2px; }
+
+/* Quick action grid */
+.quick-grid { gap: var(--s-3); margin-bottom: var(--s-6); }
+.quick-tile {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+  min-height: 120px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.1s;
+}
+.quick-tile:active { transform: scale(0.97); }
+.quick-tile .qt-icon { color: var(--rust); margin-bottom: var(--s-3); }
+.quick-tile .qt-icon svg { width: 26px; height: 26px; stroke-width: 1.8; }
+.quick-tile .qt-title { font-size: 17px; font-weight: 600; color: var(--txt-strong); line-height: 1.2; }
+.quick-tile .qt-meta { font-size: 11.5px; color: var(--txt-muted); margin-top: 6px; font-family: var(--mono); letter-spacing: 0.02em; }
+
+/* Secondary links list */
+.sec-links {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: var(--s-5);
+}
+.sec-link {
+  padding: 16px 18px;
+  font-size: 15px;
+  color: var(--txt-strong);
+  border-bottom: 1px solid var(--hairline);
+  transition: background 0.15s;
+}
+.sec-link:active { background: var(--bg-surface-2); }
+.sec-link .sl-chev svg { width: 18px; height: 18px; color: var(--txt-soft); }
+
+/* ---------- KV LIST ---------- */
+.kv-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+  border-bottom-style: solid;
+  font-size: 14.5px;
+}
+.kv-list li:last-child { border-bottom: none; }
+.kv-list .k { color: var(--txt-muted); }
+.kv-list .v { color: var(--txt-strong); font-size: 13px; font-feature-settings: 'tnum'; }
+
+/* ---------- CALLOUTS ---------- */
+.callout {
+  background: rgba(176,74,46,0.07);
+  border-left-width: 3px;
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--txt-body);
+  margin: var(--s-4) 0;
+}
+html[data-theme="dark"] .callout { background: rgba(176,74,46,0.1); }
+.callout.amber { background: rgba(200,154,58,0.10); }
+.callout.slate { background: rgba(42,58,68,0.07); }
+html[data-theme="dark"] .callout.amber { background: rgba(200,154,58,0.13); }
+html[data-theme="dark"] .callout.slate { background: rgba(120,140,150,0.1); border-left-color: #6a8090; }
+html[data-theme="dark"] .callout.slate strong { color: #9eb3bf; }
+
+/* ---------- PHASE TILES ---------- */
+.phase-tile {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--s-3);
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+.phase-tile::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--rust);
+  border-radius: 0 2px 2px 0;
+}
+.phase-tile:active { transform: scale(0.985); }
+.phase-tile .pt-num {
+  font-size: 44px;
+  letter-spacing: -0.03em;
+}
+.phase-tile .pt-title { color: var(--txt-strong); font-size: 20px; }
+.phase-tile .pt-range { color: var(--txt-muted); }
+.phase-tile .pt-desc { color: var(--txt-muted); font-size: 14px; }
+.phase-tile .pt-foot {
+  border-top: 1px solid var(--hairline);
+  font-size: 12px;
+  color: var(--txt-muted);
+}
+.pt-status {
+  border-radius: var(--r-full);
+  font-weight: 700;
+  font-family: var(--sans);
+  letter-spacing: 0.12em;
+}
+.pt-status.current {
+  background: var(--moss);
+  color: #f4f1ea;
+}
+.pt-status.provisional {
+  background: rgba(200,154,58,0.15);
+  color: #8b6818;
+}
+html[data-theme="dark"] .pt-status.provisional { background: rgba(200,154,58,0.2); color: var(--ochre); }
+
+/* ---------- WEEK GRID ---------- */
+.week-list {
+  gap: var(--s-3);
+}
+.week-tile {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  padding: var(--s-4);
+  box-shadow: var(--shadow-sm);
+  min-height: 116px;
+  transition: transform 0.1s;
+}
+.week-tile:active { transform: scale(0.97); }
+.week-tile .wt-num {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--txt-strong);
+  letter-spacing: -0.025em;
+}
+.week-tile .wt-theme { color: var(--txt-muted); font-size: 12px; }
+.week-tile .wt-progress { color: var(--txt-soft); }
+.week-tile .wt-bar { height: 4px; background: var(--hairline); border-radius: 2px; }
+.week-tile .wt-bar-fill { background: var(--moss); }
+
+/* ---------- WEEK DETAIL — calendar strip + session cards ---------- */
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: var(--s-4) 0 var(--s-6);
+}
+.week-strip-day {
+  background: var(--bg-surface);
+  border-radius: var(--r-md);
+  padding: 10px 4px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.week-strip-day .wsd-label {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--txt-soft);
+  margin-bottom: 6px;
+}
+.week-strip-day .wsd-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--txt-muted);
+  transition: all 0.15s;
+}
+.week-strip-day.has-session .wsd-dot { background: var(--bg-surface-2); color: var(--txt-strong); border: 1.5px solid var(--hairline-strong); }
+.week-strip-day.done .wsd-dot { background: var(--moss); color: #f4f1ea; border: none; }
+.week-strip-day.done .wsd-dot::after { content: '✓'; font-size: 12px; }
+.week-strip-day.done .wsd-dot { font-size: 0; }
+.week-strip-day.in-progress .wsd-dot { background: var(--rust); color: #f4f1ea; border: none; }
+.week-strip-day.in-progress .wsd-dot::after { content: '▸'; font-size: 11px; }
+.week-strip-day.in-progress .wsd-dot { font-size: 0; }
+.week-strip-day.today { box-shadow: 0 0 0 2px var(--ochre), var(--shadow-sm); }
+
+/* Session cards (vertical list below strip) */
+.ses-card {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  padding: var(--s-4) var(--s-5);
+  box-shadow: var(--shadow-sm);
+  grid-template-columns: 64px 1fr 18px;
+  gap: var(--s-3);
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+.ses-card:active { transform: scale(0.985); }
+.ses-card.is-done {
+  background: var(--bg-surface);
+  border-left: 3px solid var(--moss);
+  padding-left: calc(var(--s-5) - 3px);
+}
+.ses-card.is-started {
+  border-left: 3px solid var(--rust);
+  padding-left: calc(var(--s-5) - 3px);
+}
+.ses-day {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--rust);
+}
+.ses-card.is-done .ses-day { color: var(--moss); }
+.ses-focus {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--txt-strong);
+  letter-spacing: -0.01em;
+  white-space: normal;
+  line-height: 1.25;
+}
+.ses-dur { color: var(--txt-muted); font-size: 11px; }
+.ses-badge {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  background: var(--bg-surface-2);
+  color: var(--txt-muted);
+  border-radius: var(--r-full);
+}
+.ses-badge.done { background: var(--moss); color: #f4f1ea; }
+.ses-badge.in-progress { background: var(--rust); color: #f4f1ea; }
+.ses-chev svg { width: 16px; height: 16px; color: var(--txt-soft); }
+
+/* ---------- SESSION DETAIL — workout block ---------- */
+.session {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--s-3);
+}
+.session-head { border-bottom: 1px solid var(--hairline); padding-bottom: var(--s-3); margin-bottom: var(--s-3); }
+.session-head h4 { font-size: 19px; color: var(--txt-strong); letter-spacing: -0.01em; }
+.session-meta .dur { color: var(--txt-muted); font-size: 11.5px; }
+.exercise {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 14.5px;
+  grid-template-columns: 30px 1fr auto;
+}
+.exercise:last-child { border-bottom: none; }
+.exercise .e-num { color: var(--rust); font-size: 10px; padding-top: 2px; }
+.exercise .e-name { color: var(--txt-strong); font-weight: 600; }
+.exercise .e-name small { color: var(--txt-muted); font-size: 12.5px; }
+.exercise .e-sets { color: var(--txt-strong); font-size: 11.5px; }
+.exercise .e-rpe {
+  background: var(--bg-ink);
+  color: #f4f1ea;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: var(--r-full);
+  letter-spacing: 0.05em;
+}
+.exercise .e-rpe.swim { background: var(--slate); }
+.exercise .e-rpe.mobility { background: var(--moss); }
+.exercise .e-rpe.run { background: var(--rust); }
+
+/* Action buttons */
+.btn-complete {
+  background: var(--bg-surface-2);
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--r-full);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--txt-strong);
+  text-transform: none;
+}
+.btn-complete.done { background: var(--moss); color: #f4f1ea; }
+.btn-complete:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: var(--bg-ink);
+  color: #f4f1ea;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  border-radius: var(--r-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.1s, background 0.15s;
+}
+.btn-primary:active { background: var(--rust); transform: scale(0.98); }
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--hairline-strong);
+  color: var(--txt-strong);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  border-radius: var(--r-md);
+  padding: 14px;
+}
+.btn-secondary:active { background: var(--bg-surface-2); }
+
+/* Rating buttons */
+.rating-row { gap: 8px; }
+.rating-btn {
+  background: var(--bg-app);
+  border: 1px solid var(--hairline);
+  color: var(--txt-strong);
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  padding: 14px 0;
+  border-radius: var(--r-md);
+  min-height: 48px;
+  transition: all 0.12s;
+}
+.rating-btn.selected {
+  background: var(--bg-ink);
+  color: #f4f1ea;
+  border-color: var(--bg-ink);
+  transform: scale(1.04);
+}
+.rating-btn:active { transform: scale(0.95); }
+
+/* ---------- DECISIONS / PRINCIPLES ---------- */
+.decision-card {
+  background: var(--bg-surface);
+  border-left: 3px solid var(--slate);
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
+  padding: var(--s-4) var(--s-5);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--s-3);
+}
+.decision-card h4 { font-size: 17px; color: var(--txt-strong); line-height: 1.3; }
+.decision-card p { color: var(--txt-body); font-size: 14px; line-height: 1.5; }
+.decision-card .scen { color: var(--slate); font-weight: 700; }
+html[data-theme="dark"] .decision-card { border-left-color: #6a8090; }
+html[data-theme="dark"] .decision-card .scen { color: #9eb3bf; }
+
+.principle {
+  padding: var(--s-4) 0;
+  border-bottom: 1px solid var(--hairline);
+  grid-template-columns: 44px 1fr;
+}
+.principle .roman { font-size: 30px; }
+.principle h4 { color: var(--txt-strong); font-size: 17px; line-height: 1.25; }
+.principle p { color: var(--txt-body); font-size: 14px; }
+
+/* ---------- TRACKING ---------- */
+.stat-grid { gap: var(--s-2); }
+.stat-card {
+  background: var(--bg-surface);
+  color: var(--txt-strong);
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.stat-card .l {
+  color: var(--txt-muted);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+.stat-card .v {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--txt-strong);
+  letter-spacing: -0.02em;
+}
+.stat-card .d { color: var(--txt-soft); font-family: var(--mono); font-size: 10.5px; }
+.stat-card .d.up { color: var(--rust); }
+.stat-card .d.down { color: var(--moss); }
+
+.chart-card {
+  background: var(--bg-surface);
+  border: none;
+  padding: var(--s-5);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--s-3);
+}
+.chart-card h5 {
+  color: var(--txt-muted);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--s-3);
+}
+.chart-filter button {
+  background: var(--bg-surface);
+  border: 1px solid var(--hairline);
+  color: var(--txt-muted);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  padding: 8px 14px;
+  border-radius: var(--r-full);
+}
+.chart-filter button.active {
+  background: var(--bg-ink);
+  color: #f4f1ea;
+  border-color: var(--bg-ink);
+}
+
+/* ---------- FORMS ---------- */
+.form-card {
+  background: var(--bg-surface);
+  border: none;
+  padding: var(--s-5);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.form-row label {
+  color: var(--txt-muted);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+.form-row input, .form-row textarea {
+  background: var(--bg-app);
+  border: 1px solid var(--hairline);
+  color: var(--txt-strong);
+  font-size: 16px;
+  padding: 13px 14px;
+  border-radius: var(--r-md);
+  transition: border-color 0.15s, background 0.15s;
+}
+.form-row input:focus, .form-row textarea:focus {
+  outline: none;
+  border-color: var(--rust);
+  background: var(--bg-surface-2);
+}
+
+/* ---------- LOG TABLE ---------- */
+.log-table { font-size: 13px; }
+.log-table th {
+  background: transparent;
+  color: var(--txt-muted);
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--hairline-strong);
+}
+.log-table td {
+  color: var(--txt-strong);
+  padding: 12px 6px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* ---------- REASSESS ---------- */
+.reassess-q { padding: 14px 0; border-bottom: 1px solid var(--hairline); }
+.reassess-q .qnum { color: var(--rust); font-weight: 700; letter-spacing: 0.12em; }
+.reassess-q p { font-size: 15px; color: var(--txt-strong); }
+.reassess-q textarea {
+  background: var(--bg-app);
+  border: 1px solid var(--hairline);
+  color: var(--txt-strong);
+  font-size: 14.5px;
+  padding: 12px;
+  border-radius: var(--r-md);
+}
+
+/* ---------- SETTINGS ---------- */
+.settings-group {
+  background: var(--bg-surface);
+  border: none;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.settings-row {
+  padding: 16px 18px;
+  font-size: 15.5px;
+  color: var(--txt-strong);
+  border-bottom: 1px solid var(--hairline);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row:active { background: var(--bg-surface-2); }
+.settings-row .sr-meta { color: var(--txt-muted); font-family: var(--mono); font-size: 12px; }
+.settings-row.danger { color: var(--rust); }
+
+/* Theme toggle row */
+.theme-toggle {
+  display: inline-flex;
+  background: var(--bg-app);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-full);
+  padding: 3px;
+  gap: 2px;
+}
+.theme-toggle button {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt-muted);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.theme-toggle button.active {
+  background: var(--bg-ink);
+  color: #f4f1ea;
+}
+
+/* ---------- OVERVIEW TIMELINE ---------- */
+.phase-row { border-bottom: 1px solid var(--hairline); }
+.phase-row h3 { color: var(--txt-strong); font-size: 18px; }
+.phase-row p { color: var(--txt-body); font-size: 13.5px; }
+.phase-row .when { color: var(--txt-muted); }
+.phase-row .tag { border-radius: var(--r-full); padding: 3px 10px; font-weight: 600; letter-spacing: 0.08em; }
+
+/* ---------- TODAY CARD STATES ---------- */
+.today-card.complete .today-eyebrow { color: var(--moss); }
+.today-card.complete .today-cta { background: rgba(244,241,234,0.12); color: #f4f1ea; }
+
+/* ---------- PROGRESS RING (in week tile, future) ---------- */
+.progress-ring {
+  position: relative;
+  width: 36px; height: 36px;
+}
+.progress-ring svg { transform: rotate(-90deg); }
+.progress-ring .ring-bg { fill: none; stroke: var(--hairline); stroke-width: 3.5; }
+.progress-ring .ring-fg { fill: none; stroke: var(--moss); stroke-width: 3.5; stroke-linecap: round; }
+.progress-ring .ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--txt-strong);
+}
+
+/* ---------- DARK MODE: image/canvas tweaks ---------- */
+html[data-theme="dark"] canvas { filter: brightness(1.05); }
+
+/* ---------- RIPPLE-FREE TAP STATES ---------- */
+button { -webkit-tap-highlight-color: transparent; user-select: none; }
+button:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; }
+
+/* ---------- SMALL DEVICE TUNING ---------- */
+@media (max-width: 380px) {
+  .h1 { font-size: 34px; }
+  .today-title { font-size: 22px; }
+  .stats-strip .stat-tile .v { font-size: 24px; }
+  .week-strip-day .wsd-dot { width: 18px; height: 18px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <button class="btn-back" id="btn-back" style="visibility:hidden;" aria-label="Back" onclick="Router.pop()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div class="topbar-title" id="topbar-title">Hybrid</div>
+      <div class="topbar-spacer" id="topbar-spacer"></div>
+    </div>
+  </header>
+
+  <!-- SCREEN STACK -->
+  <main class="stack" id="stack"></main>
+
+  <!-- TAB BAR -->
+  <nav class="tabbar" id="tabbar">
+    <div class="tabbar-inner">
+      <button class="tab active" data-tab="home" onclick="Router.switchTab('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10h14V10"></path></svg>
+        <span>Home</span>
+      </button>
+      <button class="tab" data-tab="phases" onclick="Router.switchTab('phases')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="9" y1="4" x2="9" y2="20"></line></svg>
+        <span>Phases</span>
+      </button>
+      <button class="tab" data-tab="tracking" onclick="Router.switchTab('tracking')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        <span>Tracking</span>
+      </button>
+      <button class="tab" data-tab="profile" onclick="Router.switchTab('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Profile</span>
+      </button>
+      <button class="tab" data-tab="settings" onclick="Router.switchTab('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+  </nav>
+
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   MODULE: STORAGE — localStorage wrapper
+   ============================================================ */
+const Storage = (() => {
+  // ---- v4 (structured): the canonical keys going forward ----
+  // ---- v3 (legacy): kept for one-time migration ----
+  const KEYS = {
+    // structured tables (v4)
+    users:             'htp_users_v4',
+    plans:             'htp_plans_v4',
+    phases:            'htp_phases_v4',
+    weeks:             'htp_weeks_v4',
+    sessions:          'htp_sessions_v4',
+    sessionLogs:       'htp_session_logs_v4',
+    weeklyCheckins:    'htp_weekly_checkins_v4',
+    reassessments:     'htp_reassessments_v4',
+    wearableReadings:  'htp_wearable_readings_v4',
+    aiRecommendations: 'htp_ai_recommendations_v4',
+    appMeta:           'htp_app_meta_v4',
+    // legacy (v3) — read-only during migration, deleted on success
+    legacyLogs:     'htp_logs_v3',
+    legacySessions: 'htp_sessions_v3',
+    legacyReassess: 'htp_reassess_v3'
+  };
+  const load = (k, fb) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : fb; } catch(e) { return fb; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e) { alert('Storage unavailable'); return false; } };
+  const remove = (k) => { try { localStorage.removeItem(k); } catch(e) {} };
+  return { KEYS, load, save, remove };
+})();
+
+/* ============================================================
+   MODULE: DATABASE — typed entity facade
+   Each table is a flat collection of records keyed by UUID.
+   Designed to migrate row-for-row to a Supabase Postgres schema.
+   ============================================================ */
+const Database = (() => {
+  // ---------- ID generation ----------
+  const uuid = () => {
+    if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    // Fallback for older browsers
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+  const now = () => new Date().toISOString();
+
+  // ---------- Schema (documentation for migration) ----------
+  // Every table is { [id]: record }. Records carry id + created_at + updated_at.
+  // Soft delete via deleted_at (null = active).
+  const SCHEMA = {
+    users: {
+      // id, name, email, profile, settings, created_at, updated_at, deleted_at
+      // profile: { age, bodyweight_kg, height_cm, sex, injuries:[], goals:[] }
+      // settings: { units, default_pool_length_m, theme }
+    },
+    training_plans: {
+      // id, user_id (FK), name, description, start_date, target_end_date,
+      // status (active|paused|completed|archived), template_ref (string),
+      // created_at, updated_at, deleted_at
+    },
+    phases: {
+      // id, plan_id (FK), template_phase_id (int — references static Plan module),
+      // order (int), week_range_start (int), week_range_end (int),
+      // status (upcoming|active|completed|skipped),
+      // started_at, completed_at, created_at, updated_at, deleted_at
+    },
+    weeks: {
+      // id, phase_id (FK), week_number (int — absolute, e.g. 5..56),
+      // week_in_phase (int — 1..N), deload (bool),
+      // status (upcoming|active|completed|skipped),
+      // started_at, completed_at, created_at, updated_at, deleted_at
+    },
+    sessions: {
+      // id, week_id (FK), order (int), day_label (string, e.g. "Monday"),
+      // template_ref (string, e.g. "p1_wk5_s0" — soft ref into static Plan),
+      // status (pending|in_progress|completed|skipped),
+      // scheduled_for (ISO date | null),
+      // started_at, completed_at, created_at, updated_at, deleted_at
+    },
+    session_logs: {
+      // id, session_id (FK), user_id (FK),
+      // started_at, completed_at, duration_sec,
+      // quality (1-5|null), energy (1-5|null), recovery (1-5|null),
+      // notes (text), created_at, updated_at, deleted_at
+    },
+    weekly_checkins: {
+      // id, user_id (FK), week_ending (date),
+      // bodyweight_kg, resting_hr, avg_rpe, sleep_score, knee_rating,
+      // notes (text), created_at, updated_at, deleted_at
+    },
+    reassessments: {
+      // id, user_id (FK), quarter_number (int 1..4), period_end (date),
+      // answers (jsonb: { q1: ..., q2: ..., ... }),
+      // created_at, updated_at, deleted_at
+    },
+    wearable_readings: {
+      // id, user_id (FK), source (string: 'apple_watch'|'garmin'|'whoop'|'manual'),
+      // recorded_at (timestamp), metric (string: 'hrv'|'rhr'|'sleep_hr'|'steps'|...),
+      // value (numeric), unit (string), raw (jsonb), created_at
+      // PLACEHOLDER — schema ready, currently empty.
+    },
+    ai_recommendations: {
+      // id, user_id (FK), context (string: 'session'|'week'|'phase'|'recovery'),
+      // ref_id (FK polymorphic — id of session/week/etc),
+      // model (string), prompt_summary (text), recommendation (text),
+      // confidence (0-1|null), accepted (bool|null),
+      // user_response (text|null), created_at, updated_at
+      // PLACEHOLDER — schema ready, currently empty.
+    }
+  };
+
+  // ---------- In-memory state ----------
+  const tables = {
+    users:             Storage.load(Storage.KEYS.users, {}),
+    plans:             Storage.load(Storage.KEYS.plans, {}),
+    phases:            Storage.load(Storage.KEYS.phases, {}),
+    weeks:             Storage.load(Storage.KEYS.weeks, {}),
+    sessions:          Storage.load(Storage.KEYS.sessions, {}),
+    sessionLogs:       Storage.load(Storage.KEYS.sessionLogs, {}),
+    weeklyCheckins:    Storage.load(Storage.KEYS.weeklyCheckins, {}),
+    reassessments:     Storage.load(Storage.KEYS.reassessments, {}),
+    wearableReadings:  Storage.load(Storage.KEYS.wearableReadings, {}),
+    aiRecommendations: Storage.load(Storage.KEYS.aiRecommendations, {})
+  };
+  const appMeta = Storage.load(Storage.KEYS.appMeta, { version: null, migrated_from_v3: false });
+
+  const persist = (tableName) => {
+    const k = Storage.KEYS[tableName];
+    if (k) Storage.save(k, tables[tableName]);
+  };
+  const persistMeta = () => Storage.save(Storage.KEYS.appMeta, appMeta);
+
+  // ---------- Generic CRUD per table ----------
+  const subs = [];
+  const notify = () => subs.forEach(fn => fn(tables));
+  const subscribe = (fn) => { subs.push(fn); return () => { const i = subs.indexOf(fn); if (i >= 0) subs.splice(i, 1); }; };
+
+  function table(name) {
+    return {
+      all() {
+        return Object.values(tables[name]).filter(r => !r.deleted_at);
+      },
+      get(id) {
+        const r = tables[name][id];
+        return r && !r.deleted_at ? r : null;
+      },
+      find(predicate) {
+        return this.all().find(predicate) || null;
+      },
+      filter(predicate) {
+        return this.all().filter(predicate);
+      },
+      create(fields = {}) {
+        const id = fields.id || uuid();
+        const record = {
+          id,
+          ...fields,
+          created_at: fields.created_at || now(),
+          updated_at: now(),
+          deleted_at: null
+        };
+        tables[name][id] = record;
+        persist(name);
+        notify();
+        return record;
+      },
+      update(id, patch) {
+        if (!tables[name][id]) return null;
+        tables[name][id] = { ...tables[name][id], ...patch, updated_at: now() };
+        persist(name);
+        notify();
+        return tables[name][id];
+      },
+      remove(id) { // soft delete
+        if (!tables[name][id]) return false;
+        tables[name][id].deleted_at = now();
+        tables[name][id].updated_at = now();
+        persist(name);
+        notify();
+        return true;
+      },
+      hardDelete(id) {
+        if (!tables[name][id]) return false;
+        delete tables[name][id];
+        persist(name);
+        notify();
+        return true;
+      },
+      replaceAll(records) {
+        tables[name] = {};
+        (records || []).forEach(r => {
+          if (r && r.id) tables[name][r.id] = r;
+        });
+        persist(name);
+        notify();
+      }
+    };
+  }
+
+  const tablesApi = {
+    users:             table('users'),
+    plans:             table('plans'),
+    phases:            table('phases'),
+    weeks:             table('weeks'),
+    sessions:          table('sessions'),
+    sessionLogs:       table('sessionLogs'),
+    weeklyCheckins:    table('weeklyCheckins'),
+    reassessments:     table('reassessments'),
+    wearableReadings:  table('wearableReadings'),
+    aiRecommendations: table('aiRecommendations')
+  };
+
+  // ---------- Seed: ensure a default user + active plan exist ----------
+  function ensureDefaultUserAndPlan() {
+    let user = tablesApi.users.find(u => true);
+    if (!user) {
+      user = tablesApi.users.create({
+        name: 'Athlete',
+        email: null,
+        profile: {
+          age: 28,
+          bodyweight_kg: 80,
+          height_cm: null,
+          sex: null,
+          injuries: [{ id: uuid(), label: 'Left patellar tendon — mild, improving', flagged_at: now() }],
+          goals: [
+            { id: uuid(), rank: 1, label: '1:40 half marathon', target_date: '2026-12-31' },
+            { id: uuid(), rank: 2, label: '2.5 km continuous swim', target_date: '2026-12-31' },
+            { id: uuid(), rank: 3, label: 'Ski-ready', target_date: '2026-11-01' }
+          ]
+        },
+        settings: {
+          units: 'metric',
+          default_pool_length_m: 20,
+          theme: 'paper'
+        }
+      });
+    }
+    let plan = tablesApi.plans.find(p => p.user_id === user.id && p.status === 'active');
+    if (!plan) {
+      plan = tablesApi.plans.create({
+        user_id: user.id,
+        name: 'Hybrid 12-Month Plan',
+        description: 'Built to last, not to peak. Foundation → Run reentry → Half build → Pre-ski + peak → Ski season.',
+        start_date: null,
+        target_end_date: null,
+        status: 'active',
+        template_ref: 'hybrid_v1'
+      });
+    }
+    return { user, plan };
+  }
+
+  // ---------- v3 → v4 migration ----------
+  function migrateFromV3() {
+    if (appMeta.migrated_from_v3) return false;
+
+    const legacyLogs     = Storage.load(Storage.KEYS.legacyLogs, null);
+    const legacySessions = Storage.load(Storage.KEYS.legacySessions, null);
+    const legacyReassess = Storage.load(Storage.KEYS.legacyReassess, null);
+
+    const hasLegacy = (legacyLogs && legacyLogs.length) ||
+                      (legacySessions && Object.keys(legacySessions).length) ||
+                      (legacyReassess && Object.keys(legacyReassess).length);
+
+    // Always ensure user + plan exist
+    const { user, plan } = ensureDefaultUserAndPlan();
+
+    if (!hasLegacy) {
+      appMeta.migrated_from_v3 = true;
+      appMeta.version = 4;
+      persistMeta();
+      return true;
+    }
+
+    // Weekly check-ins ← legacy logs
+    if (legacyLogs && Array.isArray(legacyLogs)) {
+      legacyLogs.forEach(entry => {
+        tablesApi.weeklyCheckins.create({
+          user_id: user.id,
+          week_ending: entry.date || null,
+          bodyweight_kg: entry.bw ? parseFloat(entry.bw) : null,
+          resting_hr: entry.rhr ? parseFloat(entry.rhr) : null,
+          avg_rpe: entry.rpe ? parseFloat(entry.rpe) : null,
+          sleep_score: entry.sleep ? parseFloat(entry.sleep) : null,
+          knee_rating: entry.knee ? parseFloat(entry.knee) : null,
+          notes: entry.notes || ''
+        });
+      });
+    }
+
+    // Reassessment answers ← legacy reassess object (single quarter row)
+    if (legacyReassess && Object.keys(legacyReassess).length) {
+      tablesApi.reassessments.create({
+        user_id: user.id,
+        quarter_number: 1,
+        period_end: null,
+        answers: { ...legacyReassess }
+      });
+    }
+
+    // Sessions + session logs ← legacy sessions object keyed by template_ref
+    if (legacySessions && typeof legacySessions === 'object') {
+      Object.entries(legacySessions).forEach(([templateRef, value]) => {
+        // Normalise legacy shapes (true | { completed: true, startedAt, ... })
+        const isObj = value && typeof value === 'object';
+        const completed = value === true || (isObj && value.completed === true);
+        if (!completed && !(isObj && value.startedAt)) return;
+
+        // Create a session row carrying the template_ref
+        const session = tablesApi.sessions.create({
+          week_id: null,  // not materialised in v3 — left null for now
+          order: null,
+          day_label: null,
+          template_ref: templateRef,
+          status: completed ? 'completed' : 'in_progress',
+          started_at: isObj ? (value.startedAt || null) : null,
+          completed_at: isObj ? (value.completedAt || null) : (completed ? now() : null),
+          scheduled_for: null
+        });
+
+        if (completed) {
+          const startedAt = isObj ? value.startedAt : null;
+          const completedAt = isObj ? value.completedAt : now();
+          const durationSec = (startedAt && completedAt)
+            ? Math.max(0, Math.floor((new Date(completedAt) - new Date(startedAt)) / 1000))
+            : null;
+          tablesApi.sessionLogs.create({
+            session_id: session.id,
+            user_id: user.id,
+            started_at: startedAt,
+            completed_at: completedAt,
+            duration_sec: durationSec,
+            quality: isObj ? (value.quality ?? null) : null,
+            energy: isObj ? (value.energy ?? null) : null,
+            recovery: isObj ? (value.recovery ?? null) : null,
+            notes: isObj ? (value.notes || '') : ''
+          });
+        }
+      });
+    }
+
+    appMeta.migrated_from_v3 = true;
+    appMeta.version = 4;
+    persistMeta();
+
+    // Keep legacy keys for 1 release in case manual recovery is needed.
+    // To remove now uncomment:
+    // Storage.remove(Storage.KEYS.legacyLogs);
+    // Storage.remove(Storage.KEYS.legacySessions);
+    // Storage.remove(Storage.KEYS.legacyReassess);
+
+    return true;
+  }
+
+  // ---------- Domain-specific helpers (the "service layer") ----------
+  const services = {
+    // Current active user (single-user app for now, but ready for multi-user)
+    currentUser() {
+      return tablesApi.users.find(u => true);
+    },
+    currentPlan() {
+      const u = this.currentUser();
+      if (!u) return null;
+      return tablesApi.plans.find(p => p.user_id === u.id && p.status === 'active');
+    },
+
+    // Session lifecycle keyed by template_ref (e.g. "p1_wk5_s0"), which is what
+    // the UI works with. Internally we materialise a sessions row on first touch.
+    findOrCreateSessionByTemplate(templateRef) {
+      let s = tablesApi.sessions.find(x => x.template_ref === templateRef);
+      if (s) return s;
+      return tablesApi.sessions.create({
+        week_id: null,
+        order: null,
+        day_label: null,
+        template_ref: templateRef,
+        status: 'pending',
+        started_at: null,
+        completed_at: null,
+        scheduled_for: null
+      });
+    },
+    sessionStatus(templateRef) {
+      const s = tablesApi.sessions.find(x => x.template_ref === templateRef);
+      if (!s) return { status: 'pending', session: null, log: null };
+      const log = s.status === 'completed'
+        ? tablesApi.sessionLogs.find(l => l.session_id === s.id)
+        : null;
+      return { status: s.status, session: s, log };
+    },
+    startSession(templateRef) {
+      const u = services.currentUser();
+      const s = services.findOrCreateSessionByTemplate(templateRef);
+      tablesApi.sessions.update(s.id, {
+        status: 'in_progress',
+        started_at: s.started_at || now()
+      });
+    },
+    completeSession(templateRef, { quality, energy, recovery, notes } = {}) {
+      const u = services.currentUser();
+      const s = services.findOrCreateSessionByTemplate(templateRef);
+      const startedAt = s.started_at || null;
+      const completedAt = now();
+      const durationSec = startedAt ? Math.max(0, Math.floor((new Date(completedAt) - new Date(startedAt)) / 1000)) : null;
+
+      tablesApi.sessions.update(s.id, {
+        status: 'completed',
+        started_at: startedAt,
+        completed_at: completedAt
+      });
+      // Upsert log
+      const existingLog = tablesApi.sessionLogs.find(l => l.session_id === s.id);
+      if (existingLog) {
+        tablesApi.sessionLogs.update(existingLog.id, {
+          started_at: startedAt,
+          completed_at: completedAt,
+          duration_sec: durationSec,
+          quality: quality ?? null,
+          energy: energy ?? null,
+          recovery: recovery ?? null,
+          notes: notes || ''
+        });
+      } else {
+        tablesApi.sessionLogs.create({
+          session_id: s.id,
+          user_id: u ? u.id : null,
+          started_at: startedAt,
+          completed_at: completedAt,
+          duration_sec: durationSec,
+          quality: quality ?? null,
+          energy: energy ?? null,
+          recovery: recovery ?? null,
+          notes: notes || ''
+        });
+      }
+    },
+    uncompleteSession(templateRef) {
+      const s = tablesApi.sessions.find(x => x.template_ref === templateRef);
+      if (!s) return;
+      // Soft-delete the session log; reset session status
+      const log = tablesApi.sessionLogs.find(l => l.session_id === s.id);
+      if (log) tablesApi.sessionLogs.remove(log.id);
+      tablesApi.sessions.update(s.id, { status: 'pending', completed_at: null });
+    },
+
+    // Weekly check-ins
+    addCheckin(fields) {
+      const u = services.currentUser();
+      return tablesApi.weeklyCheckins.create({
+        user_id: u ? u.id : null,
+        week_ending: fields.date || null,
+        bodyweight_kg: fields.bw ? parseFloat(fields.bw) : null,
+        resting_hr: fields.rhr ? parseFloat(fields.rhr) : null,
+        avg_rpe: fields.rpe ? parseFloat(fields.rpe) : null,
+        sleep_score: fields.sleep ? parseFloat(fields.sleep) : null,
+        knee_rating: fields.knee ? parseFloat(fields.knee) : null,
+        notes: fields.notes || ''
+      });
+    },
+    listCheckins() {
+      return tablesApi.weeklyCheckins.all().sort((a,b) => (a.week_ending || '').localeCompare(b.week_ending || ''));
+    },
+
+    // Reassessment — one row per quarter. We treat it as upsert keyed by answer field.
+    setReassessAnswer(qid, value) {
+      const u = services.currentUser();
+      let r = tablesApi.reassessments.find(x => x.user_id === (u ? u.id : null) && x.quarter_number === 1);
+      if (!r) {
+        r = tablesApi.reassessments.create({
+          user_id: u ? u.id : null,
+          quarter_number: 1,
+          period_end: null,
+          answers: {}
+        });
+      }
+      const answers = { ...(r.answers || {}), [qid]: value };
+      tablesApi.reassessments.update(r.id, { answers });
+    },
+    getReassessAnswers() {
+      const u = services.currentUser();
+      const r = tablesApi.reassessments.find(x => x.user_id === (u ? u.id : null) && x.quarter_number === 1);
+      return r ? (r.answers || {}) : {};
+    },
+
+    // Export — flat JSON ready for backup or Supabase import
+    exportAll() {
+      return {
+        schema_version: 4,
+        exported_at: now(),
+        users:              tablesApi.users.all(),
+        training_plans:     tablesApi.plans.all(),
+        phases:             tablesApi.phases.all(),
+        weeks:              tablesApi.weeks.all(),
+        sessions:           tablesApi.sessions.all(),
+        session_logs:       tablesApi.sessionLogs.all(),
+        weekly_checkins:    tablesApi.weeklyCheckins.all(),
+        reassessments:      tablesApi.reassessments.all(),
+        wearable_readings:  tablesApi.wearableReadings.all(),
+        ai_recommendations: tablesApi.aiRecommendations.all()
+      };
+    },
+    importAll(data) {
+      if (!data || typeof data !== 'object') return false;
+      const map = [
+        ['users', 'users'],
+        ['training_plans', 'plans'],
+        ['phases', 'phases'],
+        ['weeks', 'weeks'],
+        ['sessions', 'sessions'],
+        ['session_logs', 'sessionLogs'],
+        ['weekly_checkins', 'weeklyCheckins'],
+        ['reassessments', 'reassessments'],
+        ['wearable_readings', 'wearableReadings'],
+        ['ai_recommendations', 'aiRecommendations']
+      ];
+      map.forEach(([snakeKey, camelKey]) => {
+        if (Array.isArray(data[snakeKey])) {
+          tablesApi[camelKey].replaceAll(data[snakeKey]);
+        }
+      });
+      // Also accept the legacy {logs, sessions, reassess} v3 shape — re-run migration
+      if (data.logs || data.sessions || data.reassess) {
+        // write v3 keys and re-run migration
+        if (data.logs) Storage.save(Storage.KEYS.legacyLogs, data.logs);
+        if (data.sessions) Storage.save(Storage.KEYS.legacySessions, data.sessions);
+        if (data.reassess) Storage.save(Storage.KEYS.legacyReassess, data.reassess);
+        appMeta.migrated_from_v3 = false;
+        persistMeta();
+        migrateFromV3();
+      }
+      ensureDefaultUserAndPlan();
+      return true;
+    },
+    resetAll() {
+      Object.keys(tables).forEach(t => { tables[t] = {}; persist(t); });
+      appMeta.migrated_from_v3 = false;
+      appMeta.version = 4;
+      persistMeta();
+      Storage.remove(Storage.KEYS.legacyLogs);
+      Storage.remove(Storage.KEYS.legacySessions);
+      Storage.remove(Storage.KEYS.legacyReassess);
+      ensureDefaultUserAndPlan();
+      notify();
+    }
+  };
+
+  // Run migration on first boot, then ensure defaults
+  migrateFromV3();
+  ensureDefaultUserAndPlan();
+
+  return {
+    SCHEMA,
+    tables: tablesApi,
+    services,
+    subscribe,
+    uuid,
+    now,
+    _meta: appMeta
+  };
+})();
+
+/* ============================================================
+   MODULE: STATE — backwards-compat facade over Database
+   Existing screens read `s.logs`, `s.sessions`, `s.reassess`.
+   We rebuild that shape on demand from the structured tables
+   so no screen code has to change.
+   ============================================================ */
+const State = (() => {
+  const subs = [];
+  Database.subscribe(() => subs.forEach(fn => fn(buildLegacyView())));
+
+  function buildLegacyView() {
+    // logs (sorted by created order in original v3; we sort by week_ending here)
+    const checkins = Database.services.listCheckins();
+    const logs = checkins.map(c => ({
+      _id: c.id,
+      date: c.week_ending || '',
+      bw: c.bodyweight_kg != null ? String(c.bodyweight_kg) : '',
+      rhr: c.resting_hr != null ? String(c.resting_hr) : '',
+      rpe: c.avg_rpe != null ? String(c.avg_rpe) : '',
+      sleep: c.sleep_score != null ? String(c.sleep_score) : '',
+      knee: c.knee_rating != null ? String(c.knee_rating) : '',
+      notes: c.notes || ''
+    }));
+
+    // sessions — re-derive the templateRef → status map screens expect
+    const sessionsMap = {};
+    Database.tables.sessions.all().forEach(s => {
+      if (!s.template_ref) return;
+      const log = s.status === 'completed' ? Database.tables.sessionLogs.find(l => l.session_id === s.id) : null;
+      sessionsMap[s.template_ref] = {
+        completed: s.status === 'completed',
+        startedAt: s.started_at || null,
+        completedAt: s.completed_at || null,
+        quality: log ? log.quality : null,
+        energy: log ? log.energy : null,
+        recovery: log ? log.recovery : null,
+        notes: log ? (log.notes || '') : ''
+      };
+    });
+
+    return {
+      logs,
+      sessions: sessionsMap,
+      reassess: Database.services.getReassessAnswers()
+    };
+  }
+
+  const get = () => buildLegacyView();
+  const subscribe = (fn) => { subs.push(fn); return () => { const i = subs.indexOf(fn); if (i >= 0) subs.splice(i, 1); }; };
+
+  // Same action surface as before — calls delegate into Database services
+  const actions = {
+    // Weekly check-ins
+    addLog(entry) { Database.services.addCheckin(entry); },
+    deleteLog(idx) {
+      // Old call site uses array index; we translate to id via current ordered list
+      const ordered = Database.services.listCheckins().slice().reverse(); // legacy view sorted desc-by-date typically — but our buildLegacyView sorts ascending; recipient sorts descending themselves. To avoid breakage, use the same order as buildLegacyView output.
+      const view = buildLegacyView().logs;
+      const record = view[idx];
+      if (record && record._id) Database.tables.weeklyCheckins.remove(record._id);
+    },
+
+    // Sessions
+    getSession(templateRef) {
+      const map = buildLegacyView().sessions;
+      return map[templateRef] || null;
+    },
+    startSession(templateRef) { Database.services.startSession(templateRef); },
+    completeSession(templateRef, payload) { Database.services.completeSession(templateRef, payload); },
+    uncompleteSession(templateRef) { Database.services.uncompleteSession(templateRef); },
+    toggleSession(templateRef) {
+      const s = buildLegacyView().sessions[templateRef];
+      if (s && s.completed) Database.services.uncompleteSession(templateRef);
+      else Database.services.completeSession(templateRef, {});
+    },
+
+    // Reassessment
+    setReassess(qid, value) { Database.services.setReassessAnswer(qid, value); },
+
+    // Bulk
+    replaceAll({ logs, sessions, reassess } = {}) {
+      // Legacy import path — wrap into v3-shape import and let Database migrate
+      Database.services.importAll({ logs, sessions, reassess });
+    },
+    resetAll() { Database.services.resetAll(); }
+  };
+
+  return { get, subscribe, actions };
+})();
+
+/* ============================================================
+   MODULE: SESSION HELPERS
+   ============================================================ */
+const SessionHelper = {
+  isCompleted(templateRef) {
+    const s = State.actions.getSession(templateRef);
+    return !!(s && s.completed);
+  },
+  isStarted(templateRef) {
+    const s = State.actions.getSession(templateRef);
+    return !!(s && s.startedAt && !s.completed);
+  },
+  data(key) { return State.actions.getSession(key); }
+};
+
+/* ============================================================
+   MODULE: UTILS
+   ============================================================ */
+const Utils = {
+  escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  },
+  chevronRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
+  weekKey(phaseId, weekNum, sessionIdx) { return `p${phaseId}_wk${weekNum}_s${sessionIdx}`; },
+  // Count completed sessions across the whole sessions object (handles legacy `true` + new objects)
+  countCompleted(sessionsObj) {
+    return Object.values(sessionsObj).filter(v => {
+      if (v === true) return true;
+      if (v && typeof v === 'object') return v.completed === true;
+      return false;
+    }).length;
+  },
+  formatDuration(startISO, endISO) {
+    if (!startISO || !endISO) return '';
+    const ms = new Date(endISO) - new Date(startISO);
+    if (ms < 0 || !isFinite(ms)) return '';
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return m + 'm ' + s.toString().padStart(2, '0') + 's';
+  }
+};
+
+/* ============================================================
+   MODULE: PLAN DATA
+   ============================================================ */
+const Plan = (() => {
+  // session generators — Phase 1 (locked)
+  const p1 = {
+    mon: (wk) => ({ title: 'Monday · Lower (heavy)', duration: '60–70 min · RPE peak ' + (wk === 8 ? '6 deload' : '8'), items: [
+      { num: 'A1', name: 'Back squat', note: wk === 8 ? 'Deload: 70% load' : '+2.5 kg/wk if last set RPE ≤7', sets: wk === 8 ? '3 × 5' : '4 × 5', rpe: wk === 8 ? 'RPE 6' : 'RPE 7→8' },
+      { num: 'B1', name: 'Romanian deadlift', note: 'controlled, hinge', sets: wk === 8 ? '2 × 8' : '3 × 8', rpe: wk === 8 ? 'RPE 6' : 'RPE 7' },
+      { num: 'C1', name: 'Reverse Nordic', note: 'permanent — knee health', sets: '3 × 6–8', rpe: 'Quality', tag: 'mobility' },
+      { num: 'C2', name: 'Single-leg calf raise', note: '3s down, 1s up', sets: '3 × 12 ea.', rpe: 'RPE 7', tag: 'mobility' },
+      { num: 'D1', name: 'Pallof press', note: 'anti-rotation', sets: '3 × 10 ea.', rpe: 'RPE 6', tag: 'mobility' },
+      { num: 'D2', name: '90/90 hip flow', note: 'cooldown', sets: '2 min', rpe: 'Easy', tag: 'mobility' }
+    ]}),
+    tue: (wk) => ({ title: 'Tuesday · Upper (push/pull)', duration: '55–65 min · RPE peak ' + (wk === 8 ? '6 deload' : '8'), items: [
+      { num: 'A1', name: 'Bench press', note: '2s eccentric · ' + (wk === 8 ? 'deload 70%' : '+1.25–2.5 kg/wk @ RPE ≤7'), sets: wk === 8 ? '3 × 5' : '4 × 5', rpe: wk === 8 ? 'RPE 6' : 'RPE 7→8' },
+      { num: 'A2', name: 'Chest-supported row', note: 'squeeze 1s', sets: wk === 8 ? '3 × 8' : '4 × 8', rpe: wk === 8 ? 'RPE 6' : 'RPE 7' },
+      { num: 'B1', name: 'DB shoulder press', note: 'standing', sets: '3 × 8', rpe: 'RPE 7' },
+      { num: 'B2', name: 'Lat pulldown', note: 'or pull-ups w/ band', sets: '3 × 10', rpe: 'RPE 7' },
+      { num: 'C1', name: 'Face pull', note: 'swim posture', sets: '3 × 15', rpe: 'RPE 6', tag: 'mobility' },
+      { num: 'C2', name: 'T-spine extension on roller', note: '', sets: '2 × 60s', rpe: 'Easy', tag: 'mobility' }
+    ]}),
+    tue_pm: (wk) => ({ title: 'Tuesday PM · Swim technique', duration: '40–45 min · 20m pool', items: [
+      { num: 'W1', name: 'Warm-up easy free', note: 'long body line', sets: '10 × 20m', rpe: 'Easy', tag: 'swim' },
+      { num: 'W2', name: 'Catch-up drill', note: 'forces high elbow', sets: '6 × 20m', rpe: 'Drill', tag: 'swim' },
+      { num: 'W3', name: 'Single-arm free', note: '3 strokes each side', sets: '6 × 20m', rpe: 'Drill', tag: 'swim' },
+      { num: 'W4', name: 'Pull-buoy swim', note: 'isolates upper body', sets: '8 × 20m', rpe: 'Easy', tag: 'swim' },
+      { num: 'W5', name: 'Bilateral breathing', note: 'every 3 strokes', sets: '6 × 20m', rpe: 'Easy', tag: 'swim' },
+      { num: 'W6', name: 'Cool-down', note: '', sets: '4 × 20m', rpe: 'Easy', tag: 'swim' }
+    ]}),
+    thu: (wk) => ({ title: 'Thursday · Lower (athletic)', duration: '55–65 min · RPE peak ' + (wk === 8 ? '6 deload' : '8'), items: [
+      { num: 'A1', name: 'Trap-bar / hex deadlift', note: 'explosive intent', sets: wk === 8 ? '3 × 4' : '4 × 4', rpe: wk === 8 ? 'RPE 6' : 'RPE 7→8' },
+      { num: 'B1', name: 'Bulgarian split squat', note: '3s down, knee tracks toe', sets: wk === 8 ? '2 × 8 ea.' : '3 × 8 ea.', rpe: wk === 8 ? 'RPE 6' : 'RPE 7' },
+      { num: 'B2', name: 'Single-leg hip thrust', note: '', sets: '3 × 10 ea.', rpe: 'RPE 7' },
+      { num: 'C1', name: 'Copenhagen plank', note: 'adductor anti-injury', sets: '3 × 20–30s ea.', rpe: 'RPE 7', tag: 'mobility' },
+      { num: 'C2', name: 'Hamstring slider curl', note: '', sets: '3 × 8', rpe: 'RPE 7', tag: 'mobility' },
+      { num: 'D1', name: 'Spanish squat hold', note: 'tendon ISO', sets: '3 × 30s', rpe: 'RPE 7', tag: 'mobility' }
+    ]}),
+    thu_pm: (wk) => {
+      const main = { 5: '5 × 60m', 6: '5 × 60m', 7: '4 × 80m', 8: '3 × 40m DELOAD', 9: '3 × 100m', 10: '2 × 140m', 11: '2 × 200m', 12: '1 × 500m TT — phase gate' }[wk] || '5 × 60m';
+      return { title: 'Thursday PM · Swim endurance', duration: '45–55 min · ≈ 1.4–1.8 km', items: [
+        { num: 'W1', name: 'Warm-up easy free', note: '', sets: '10 × 20m', rpe: 'Easy', tag: 'swim' },
+        { num: 'W2', name: 'Drill: catch-up + single-arm', note: '', sets: '6 × 20m', rpe: 'Drill', tag: 'swim' },
+        { num: 'W3', name: 'Main set', note: 'Wk ' + wk + ': ' + main, sets: 'see note', rpe: 'RPE 6', tag: 'swim' },
+        { num: 'W4', name: 'Pull-buoy bonus', note: 'technique under fatigue', sets: '6 × 20m', rpe: 'Easy', tag: 'swim' },
+        { num: 'W5', name: 'Cool-down', note: '', sets: '4 × 20m', rpe: 'Easy', tag: 'swim' }
+      ]};
+    },
+    fri: (wk) => ({ title: 'Friday · Upper + conditioning', duration: '55–65 min · RPE peak ' + (wk === 8 ? '6 deload' : '8'), items: [
+      { num: 'A1', name: 'Weighted pull-up', note: 'or assisted to RPE 8', sets: wk === 8 ? '3 × 5' : '4 × 5', rpe: wk === 8 ? 'RPE 6' : 'RPE 7→8' },
+      { num: 'A2', name: 'Incline DB press', note: '', sets: wk === 8 ? '3 × 8' : '4 × 8', rpe: wk === 8 ? 'RPE 6' : 'RPE 7' },
+      { num: 'B1', name: 'Single-arm DB row', note: '', sets: '3 × 10 ea.', rpe: 'RPE 7' },
+      { num: 'B2', name: 'DB lateral raise', note: '', sets: '3 × 12', rpe: 'RPE 7' },
+      { num: 'C1', name: 'Hanging knee raise', note: '', sets: '3 × 10', rpe: 'RPE 7', tag: 'mobility' },
+      { num: 'FIN', name: 'Conditioning · pick one', note: '10 min low-impact, no running.\n· Assault bike: 30s hard/30s easy × 10\n· Ski erg: same\n· Rower: 250m × 6 on 2 min', sets: wk === 8 ? '5 min' : '10 min', rpe: wk === 8 ? 'Z2' : 'Z3–Z4' }
+    ]})
+  };
+
+  const phases = [
+    { id: 1, title: 'Foundation Consolidation', tagline: 'Lock in movement quality + swim technique before chasing load.', range: 'Wks 5–12', weekStart: 5, weekEnd: 12, status: 'current', tags: ['Strength','Swim tech','Aerobic base'],
+      summary: 'Technique-first. No running yet — by design. Builds strength and swim foundation before injury risk concentrates in Phase 2.',
+      gates: [
+        { label: 'Swim 1 km continuous', required: true },
+        { label: 'No knee symptoms in daily life', required: true },
+        { label: 'Squat 5RM ≥ 90 kg @ RPE ≤ 8', required: false },
+        { label: 'Bench 5RM ≥ 60 kg @ RPE ≤ 8', required: false },
+        { label: 'Sleep & recovery stable', required: true }
+      ],
+      weeks: [5,6,7,8,9,10,11,12].map(wk => ({
+        num: wk,
+        deload: wk === 8,
+        theme: wk === 5 ? 'Establish new split. Light loads, dial in technique.'
+            : wk === 6 ? 'Add 2.5 kg on mains if RPE allows. Swim drills harder.'
+            : wk === 7 ? 'Push working loads. First swim distance test.'
+            : wk === 8 ? 'DELOAD. Volume −1 set, load 70%. Mandatory.'
+            : wk === 9 ? 'Resume. Test new loads. Swim distance climbs.'
+            : wk === 10 ? 'Consolidation. Watch tendon response.'
+            : wk === 11 ? 'Peak loading. Long swim sets.'
+            : 'Phase gate test. 500m TT, 5RM tests.',
+        sessions: ['mon','tue','tue_pm','thu','thu_pm','fri'].map(k => p1[k](wk))
+      }))
+    },
+    { id: 2, title: 'Run Re-entry · Swim Build', tagline: 'Re-introduce running with hard guardrails.', range: 'Wks 13–20', weekStart: 13, weekEnd: 20, status: 'provisional', tags: ['Strength maint.','Swim volume','Run reentry'],
+      summary: 'Highest injury risk phase. Strict 10%/week run progression. Strength drops to maintenance.',
+      gates: [
+        { label: 'Run 5 km continuous Z2', required: true },
+        { label: 'Swim 1.5 km continuous', required: true },
+        { label: 'Maintain P1 strength', required: false },
+        { label: 'Knee asymptomatic', required: true }
+      ]},
+    { id: 3, title: 'Run Specificity · Half Build', tagline: 'Running becomes leading modality. Bridges the move.', range: 'Wks 21–30', weekStart: 21, weekEnd: 30, status: 'provisional', tags: ['Strength 2×','Swim maint.','Run focus'],
+      summary: 'Z2 long run, tempo, one quality session weekly. Swim drops to 1 quality + 1 easy. Strength holds 2×/wk brief.',
+      gates: [
+        { label: 'Half TT: sub-1:45', required: true },
+        { label: 'Run peak ~35 km/wk', required: false },
+        { label: 'Swim 2.5 km milestone', required: true },
+        { label: 'Strength preserved within 5%', required: false }
+      ]},
+    { id: 4, title: 'Pre-Ski + Half Peak', tagline: 'Ski-specific lower body + half marathon target.', range: 'Wks 31–40', weekStart: 31, weekEnd: 40, status: 'provisional', tags: ['Hybrid peak','Ski prep'],
+      summary: 'Lateral, eccentric, ISO quad. Running tapers ~Wks 38–40. October Africa deload calendared.',
+      gates: [
+        { label: 'Half marathon · 1:40 (stretch 1:35)', required: true },
+        { label: 'Single-leg squat: 5 controlled reps', required: false },
+        { label: 'Ski lateral capacity demonstrated', required: true },
+        { label: 'Healthy through taper', required: true }
+      ]},
+    { id: 5, title: 'Ski Season · Maintain · Reassess', tagline: 'Plan flips: upper-body bias, swim, Z2.', range: 'Wks 41–56', weekStart: 41, weekEnd: 56, status: 'provisional', tags: ['Off-season','Maintain'],
+      summary: 'Ski season = active recovery for legs but heavy use. Wk 56 reassessment sets year-2 anchors.',
+      gates: [
+        { label: 'Ski safely, no acute injury', required: true },
+        { label: 'Swim ≥ 2 km/wk', required: true },
+        { label: 'Strength within 10% of peak', required: false },
+        { label: 'Year-2 anchors selected', required: true }
+      ]}
+  ];
+
+  function buildProvisionalWeeks(phaseId) {
+    const phase = phases.find(p => p.id === phaseId);
+    if (!phase || phase.weeks) return;
+    const weeks = [];
+    for (let wk = phase.weekStart; wk <= phase.weekEnd; wk++) {
+      const winp = wk - phase.weekStart + 1;
+      const isDeload = winp % 4 === 0;
+      weeks.push({ num: wk, deload: isDeload, theme: themeFor(phaseId, winp, isDeload), sessions: sessionsFor(phaseId, wk, winp, isDeload), provisional: true });
+    }
+    phase.weeks = weeks;
+  }
+
+  function themeFor(pid, winp, deload) {
+    if (deload) return 'DELOAD. Volume cut. Mandatory.';
+    if (pid === 2) return ['Run reintro: 2× walk-runs. Strength to 3-day maintenance.','Build run frequency. +1 min per interval.','First continuous easy run. Swim main set extends.','','Run 2× weekly. Swim quality + easy.','Push easy run duration. Watch knees.','Build consistency. Continuous 5k attempt.',''][winp-1] || 'Build phase';
+    if (pid === 3) return ['Add tempo. Long run extends.','Push long run. Strength heavy & brief.','Tempo intensity climbs.','','Intervals appear. Long run consolidates.','Half TT — submaximal benchmark.','Build to peak run volume.','Volume peak. Watch fatigue.','Pullback before Phase 4.',''][winp-1] || 'Build';
+    if (pid === 4) return ['Add ski-specific lateral / ISO quad.','Build run quality. Add ski mobility.','Race-pace work appears.','','AFRICA — 10 days off — auto deload.','Return. Easy aerobic + ski prep.','Race-pace tune-up.','Sharpening. Lower volume, keep intensity.','Taper week.','HALF MARATHON · target 1:40'][winp-1] || 'Peak';
+    if (pid === 5) {
+      if (winp <= 4) return 'Ski season opens. Upper-body bias.';
+      if (winp <= 8) return 'Maintain swim. Active recovery.';
+      if (winp <= 12) return 'Watch accumulated ski fatigue.';
+      return 'Wk 56: full quarterly reassessment.';
+    }
+    return '';
+  }
+
+  function sessionsFor(pid, wk, winp, deload) {
+    if (pid === 2) {
+      const runText = deload ? 'DELOAD: 2× 15-min easy walk-runs' :
+        winp === 1 ? '2× walk-run (4 min walk / 1 min run × 4)' :
+        winp === 2 ? '2× walk-run (3 min / 2 min × 5)' :
+        winp === 3 ? '1× continuous 15-min easy run, 1× walk-run 25 min' :
+        winp === 5 ? '2× 20-min continuous easy Z2' :
+        winp === 6 ? '2× 25-min Z2' : '1× 30 min + 1× 35 min (target 5k continuous)';
+      return [
+        { title: 'Monday · Lower (maintenance)', duration: '50–60 min', items: [
+          { num: 'A1', name: 'Back squat', note: 'maintain, no PR chase', sets: '3 × 5', rpe: 'RPE 7' },
+          { num: 'B1', name: 'Romanian deadlift', note: '', sets: '3 × 8', rpe: 'RPE 7' },
+          { num: 'C1', name: 'Reverse Nordic', note: 'always-on', sets: '3 × 8', rpe: 'Quality', tag: 'mobility' },
+          { num: 'C2', name: 'Spanish squat hold', note: 'tendon ISO', sets: '3 × 30s', rpe: 'RPE 7', tag: 'mobility' },
+          { num: 'D1', name: 'Pallof + hip flow', note: '', sets: '3 × 10', rpe: 'Easy', tag: 'mobility' }
+        ]},
+        { title: 'Tuesday · Easy run', duration: '25–35 min', items: [
+          { num: 'R1', name: 'Easy run · Z2', note: runText + ' · conversational cap', sets: 'see note', rpe: 'Z2', tag: 'run' },
+          { num: 'R2', name: 'Post-run mobility', note: 'calf, hip flexor, quad', sets: '5 min', rpe: 'Easy', tag: 'mobility' }
+        ]},
+        { title: 'Wednesday · Swim endurance', duration: '50–60 min', items: [
+          { num: 'W1', name: 'Warm-up + drill', note: '', sets: '10 × 20m + 6 drills', rpe: 'Easy', tag: 'swim' },
+          { num: 'W2', name: 'Continuous build', note: 'Wk ' + wk + ': ' + (deload ? '4 × 100m easy' : winp === 1 ? '4 × 200m' : winp >= 6 ? '2 × 500m or 1 × 1000m' : '3 × 300m'), sets: 'see note', rpe: 'RPE 6', tag: 'swim' },
+          { num: 'W3', name: 'Cool-down', note: '', sets: '4 × 20m', rpe: 'Easy', tag: 'swim' }
+        ]},
+        { title: 'Thursday · Upper (maintenance)', duration: '50–60 min', items: [
+          { num: 'A1', name: 'Bench press', note: 'maintain', sets: '3 × 5', rpe: 'RPE 7' },
+          { num: 'A2', name: 'Pull-up / lat pulldown', note: '', sets: '3 × 8', rpe: 'RPE 7' },
+          { num: 'B1', name: 'DB shoulder press', note: '', sets: '3 × 8', rpe: 'RPE 7' },
+          { num: 'B2', name: 'Chest-supported row', note: '', sets: '3 × 8', rpe: 'RPE 7' },
+          { num: 'C1', name: 'Face pull + t-spine', note: '', sets: '3 × 15', rpe: 'Easy', tag: 'mobility' }
+        ]},
+        { title: 'Saturday · Easy run (flex)', duration: '20–30 min', items: [
+          { num: 'R1', name: 'Easy run', note: 'optional if golf goes ahead', sets: '25 min', rpe: 'Z2', tag: 'run' }
+        ]}
+      ];
+    }
+    if (pid === 3) {
+      const longRun = deload ? '40 min easy' : (10 + winp * 3) + ' km easy Z2';
+      return [
+        { title: 'Monday · Lower (heavy & brief)', duration: '45–55 min', items: [
+          { num: 'A1', name: 'Back squat', note: 'heavy & brief', sets: '3 × 3', rpe: 'RPE 7' },
+          { num: 'B1', name: 'Romanian deadlift', note: '', sets: '3 × 6', rpe: 'RPE 7' },
+          { num: 'C1', name: 'Reverse Nordic + Spanish squat', note: 'tendon protocol', sets: '3 each', rpe: 'Quality', tag: 'mobility' },
+          { num: 'D1', name: 'Single-leg calf raise', note: 'run-specific', sets: '3 × 12 ea.', rpe: 'RPE 7' }
+        ]},
+        { title: 'Tuesday · Quality run', duration: '40–55 min', items: [
+          { num: 'R1', name: 'Quality run', note: deload ? 'Deload: easy 25 min' : winp % 2 ? 'Tempo: 2 × 10 min @ HM pace, 3 min easy between' : 'Intervals: 6 × 3 min @ 5k pace / 2 min easy', sets: 'see note', rpe: 'Z3–Z4', tag: 'run' },
+          { num: 'R2', name: 'Post-run mobility', note: '', sets: '5 min', rpe: 'Easy', tag: 'mobility' }
+        ]},
+        { title: 'Wednesday · Swim (maintenance)', duration: '40 min · ~1.5 km', items: [
+          { num: 'W1', name: 'Warm-up + drills', note: '', sets: '15 × 20m', rpe: 'Easy', tag: 'swim' },
+          { num: 'W2', name: 'Continuous swim', note: winp >= 5 ? '1 × 1500–2500m' : '1 × 800m + 1 × 400m', sets: 'see note', rpe: 'RPE 6', tag: 'swim' }
+        ]},
+        { title: 'Thursday · Upper (heavy & brief)', duration: '45–55 min', items: [
+          { num: 'A1', name: 'Bench press', note: '', sets: '3 × 3', rpe: 'RPE 7' },
+          { num: 'A2', name: 'Pull-up', note: '', sets: '3 × 5', rpe: 'RPE 7' },
+          { num: 'B1', name: 'DB row + shoulder press', note: 'superset', sets: '3 × 8 each', rpe: 'RPE 7' },
+          { num: 'C1', name: 'Face pull + t-spine', note: '', sets: '3 × 15', rpe: 'Easy', tag: 'mobility' }
+        ]},
+        { title: 'Friday · Easy run', duration: '30–40 min', items: [
+          { num: 'R1', name: 'Easy aerobic', note: 'Z2 only', sets: '30–40 min', rpe: 'Z2', tag: 'run' }
+        ]},
+        { title: 'Sunday · Long run', duration: '50–90 min', items: [
+          { num: 'R1', name: 'Long run', note: 'Wk ' + wk + ': ' + longRun + ' · conversational', sets: 'see note', rpe: 'Z2', tag: 'run' },
+          { num: 'R2', name: 'Cooldown walk + mobility', note: '', sets: '10 min', rpe: 'Easy', tag: 'mobility' }
+        ]}
+      ];
+    }
+    if (pid === 4) {
+      if (winp === 5) return [{ title: 'Africa · auto-deload (10 days)', duration: 'no structured training', items: [
+        { num: 'X1', name: 'Daily walks 30–60 min', note: 'active recovery', sets: 'daily', rpe: 'Easy', tag: 'mobility' },
+        { num: 'X2', name: 'Optional bodyweight circuit', note: '2× during trip if available — push-ups, single-leg squats, planks · 20 min', sets: '2× wk', rpe: 'RPE 6' }
+      ]}];
+      if (winp === 10) return [
+        { title: 'Monday · Pre-race light', duration: '30 min', items: [{ num: 'A1', name: 'Mobility + shakeout', note: '15-min easy jog + drills', sets: '15 min', rpe: 'Easy', tag: 'run' }]},
+        { title: 'Wednesday · Race-pace primer', duration: '30 min', items: [{ num: 'R1', name: 'Easy 20 min + 4 × 1 min @ HM pace', note: '', sets: 'see note', rpe: 'Z3', tag: 'run' }]},
+        { title: 'Friday · Shakeout', duration: '15 min', items: [{ num: 'R1', name: '15 min easy + 4 strides', note: '', sets: 'see note', rpe: 'Easy', tag: 'run' }]},
+        { title: 'SUNDAY · HALF MARATHON', duration: '~1:40', items: [{ num: 'RACE', name: 'Half marathon · target 1:40 (stretch 1:35)', note: 'Pace: first 5k @ 4:50/km, settle 4:45, last 5k 4:40. Gels at 7k, 14k. Breakfast 3h pre.', sets: '21.1 km', rpe: 'RACE', tag: 'run' }]}
+      ];
+      return [
+        { title: 'Monday · Ski-specific lower', duration: '50–60 min', items: [
+          { num: 'A1', name: 'Back squat', note: '', sets: '3 × 5', rpe: 'RPE 7' },
+          { num: 'B1', name: 'Lateral lunge', note: 'frontal plane', sets: '3 × 8 ea.', rpe: 'RPE 7' },
+          { num: 'B2', name: 'Skater hops', note: 'lateral power', sets: '3 × 6 ea.', rpe: 'RPE 7' },
+          { num: 'C1', name: 'Wall sit + Spanish squat', note: '60s wall + 3 × 30s', sets: 'see note', rpe: 'RPE 7', tag: 'mobility' },
+          { num: 'D1', name: 'Reverse Nordic', note: '', sets: '3 × 8', rpe: 'Quality', tag: 'mobility' }
+        ]},
+        { title: 'Tuesday · Quality run', duration: '45 min', items: [
+          { num: 'R1', name: 'Tempo or intervals', note: deload ? 'Easy 30 min' : winp % 2 ? 'Tempo: 3 × 8 min @ HM pace' : '6 × 2 min @ 5k pace', sets: 'see note', rpe: 'Z3–Z4', tag: 'run' }
+        ]},
+        { title: 'Wednesday · Swim (maintain)', duration: '35 min', items: [
+          { num: 'W1', name: 'Continuous swim', note: '1500–2000m steady', sets: '~1.5–2 km', rpe: 'RPE 6', tag: 'swim' }
+        ]},
+        { title: 'Thursday · Upper + ski', duration: '55 min', items: [
+          { num: 'A1', name: 'Bench press', note: '', sets: '3 × 5', rpe: 'RPE 7' },
+          { num: 'A2', name: 'Pull-up', note: '', sets: '3 × 6', rpe: 'RPE 7' },
+          { num: 'B1', name: 'Single-leg RDL', note: 'balance + PC', sets: '3 × 8 ea.', rpe: 'RPE 7' },
+          { num: 'B2', name: 'Copenhagen plank', note: '', sets: '3 × 30s ea.', rpe: 'RPE 7', tag: 'mobility' }
+        ]},
+        { title: 'Friday · Easy run', duration: '30 min', items: [{ num: 'R1', name: 'Easy aerobic', note: 'Z2', sets: '30 min', rpe: 'Z2', tag: 'run' }]},
+        { title: 'Sunday · Long run', duration: '60–110 min', items: [
+          { num: 'R1', name: 'Long run', note: winp <= 3 ? '15–18 km easy' : winp === 8 ? '18 km incl. 6 km @ HM pace' : winp === 9 ? 'Taper: 12 km easy' : '15–18 km easy', sets: 'see note', rpe: 'Z2', tag: 'run' }
+        ]}
+      ];
+    }
+    if (pid === 5) return [
+      { title: 'Monday · Upper-body bias', duration: '50 min', items: [
+        { num: 'A1', name: 'Bench press', note: '', sets: '4 × 5', rpe: 'RPE 7' },
+        { num: 'A2', name: 'Pull-up / lat pulldown', note: '', sets: '4 × 6–8', rpe: 'RPE 7' },
+        { num: 'B1', name: 'DB shoulder press', note: '', sets: '3 × 8', rpe: 'RPE 7' },
+        { num: 'B2', name: 'Row variation', note: '', sets: '3 × 10', rpe: 'RPE 7' },
+        { num: 'C1', name: 'Face pull + t-spine', note: '', sets: '3 × 15', rpe: 'Easy', tag: 'mobility' }
+      ]},
+      { title: 'Tuesday · Easy aerobic', duration: '30–40 min', items: [{ num: 'X1', name: 'Easy run / swim / bike', note: 'whatever knees prefer', sets: '30–40 min', rpe: 'Z2', tag: 'run' }]},
+      { title: 'Wednesday · Swim', duration: '40 min · ~1.5km', items: [{ num: 'W1', name: 'Continuous + drill mix', note: 'maintain quality', sets: '~1.5km', rpe: 'RPE 6', tag: 'swim' }]},
+      { title: 'Thursday · Lower (lighter)', duration: '50 min', items: [
+        { num: 'A1', name: 'Front squat / goblet squat', note: 'lighter than P4', sets: '3 × 6', rpe: 'RPE 7' },
+        { num: 'B1', name: 'Single-leg RDL', note: '', sets: '3 × 8 ea.', rpe: 'RPE 7' },
+        { num: 'C1', name: 'Reverse Nordic', note: 'always-on', sets: '3 × 8', rpe: 'Quality', tag: 'mobility' },
+        { num: 'D1', name: 'Copenhagen + Spanish squat', note: '', sets: '3 each', rpe: 'RPE 7', tag: 'mobility' }
+      ]},
+      { title: 'Sat/Sun · SKI', duration: 'all day', items: [{ num: 'SKI', name: 'Ski day', note: 'primary lower body load — hydrate, eat well, sleep more', sets: 'whole day', rpe: 'RACE', tag: 'run' }]}
+    ];
+    return [];
+  }
+
+  return {
+    getPhases: () => phases,
+    getPhase: (id) => { const p = phases.find(p => p.id === id); if (p && !p.weeks) buildProvisionalWeeks(id); return p; },
+    getWeek: (pid, wkNum) => { const p = Plan.getPhase(pid); return p ? p.weeks.find(w => w.num === wkNum) : null; }
+  };
+})();
+
+/* ============================================================
+   MODULE: ROUTER — stack-based navigation with transitions
+   ============================================================ */
+const Router = (() => {
+  const stack = []; // [{ screenId, ctx, title }]
+  let currentEl = null;
+  let transitioning = false;
+
+  function renderScreen(entry, direction) {
+    const screen = Screens[entry.screenId];
+    if (!screen) { console.warn('Unknown screen:', entry.screenId); return; }
+
+    const el = document.createElement('div');
+    el.className = 'screen';
+    el.dataset.screen = entry.screenId;
+    el.innerHTML = `<div class="screen-pad">${screen.render(entry.ctx || {})}</div>`;
+
+    if (direction === 'push') el.classList.add('enter-from-right');
+    document.getElementById('stack').appendChild(el);
+
+    // Force reflow so animation runs
+    el.getBoundingClientRect();
+
+    if (direction === 'push') {
+      el.classList.remove('enter-from-right');
+      if (currentEl) currentEl.classList.add('exit-to-left');
+    } else if (direction === 'pop') {
+      if (currentEl) currentEl.classList.add('exit-to-right');
+    }
+
+    // After transition, clean up old screen
+    const prev = currentEl;
+    setTimeout(() => {
+      if (prev && prev !== el) prev.remove();
+      transitioning = false;
+      if (screen.onShow) screen.onShow(entry.ctx || {}, el);
+    }, direction === 'replace' ? 0 : 300);
+
+    currentEl = el;
+    updateTopBar(entry.title, stack.length > 1);
+    updateTabBar(entry.screenId, entry.ctx);
+    attachScrollListener(el);
+  }
+
+  function attachScrollListener(el) {
+    const topbar = document.getElementById('topbar');
+    el.addEventListener('scroll', () => {
+      if (el.scrollTop > 4) topbar.classList.add('elevated');
+      else topbar.classList.remove('elevated');
+    });
+  }
+
+  function push(screenId, ctx = {}, title) {
+    if (transitioning) return;
+    transitioning = true;
+    const entry = { screenId, ctx, title: title || Screens[screenId]?.title || screenId };
+    stack.push(entry);
+    history.pushState({ depth: stack.length }, '', '#' + screenId);
+    renderScreen(entry, 'push');
+  }
+
+  function pop() {
+    if (transitioning || stack.length <= 1) return;
+    transitioning = true;
+    stack.pop();
+    history.back();
+    const entry = stack[stack.length - 1];
+    renderScreen(entry, 'pop');
+  }
+
+  function switchTab(tabId) {
+    if (transitioning) return;
+    if (stack.length === 1 && stack[0].screenId === tabId) {
+      // already on this tab — scroll to top
+      if (currentEl) currentEl.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    transitioning = true;
+    stack.length = 0;
+    const entry = { screenId: tabId, ctx: {}, title: Screens[tabId]?.title || tabId };
+    stack.push(entry);
+    history.replaceState({ depth: 1 }, '', '#' + tabId);
+    renderScreen(entry, 'replace');
+  }
+
+  function refresh() {
+    // Re-render current screen with same context
+    if (!stack.length) return;
+    const entry = stack[stack.length - 1];
+    const screen = Screens[entry.screenId];
+    if (!screen || !currentEl) return;
+    currentEl.innerHTML = `<div class="screen-pad">${screen.render(entry.ctx || {})}</div>`;
+    if (screen.onShow) screen.onShow(entry.ctx || {}, currentEl);
+  }
+
+  function updateTopBar(title, hasBack) {
+    document.getElementById('topbar-title').textContent = title || '';
+    const back = document.getElementById('btn-back');
+    back.style.visibility = hasBack ? 'visible' : 'hidden';
+  }
+
+  function updateTabBar(currentScreen, ctx) {
+    const tabMap = { home: 'home', phases: 'phases', 'phase-detail': 'phases', 'week-detail': 'phases', 'session-detail': 'phases', tracking: 'tracking', 'checkin': 'tracking', 'metrics': 'tracking', 'trends': 'tracking', 'log': 'tracking', profile: 'profile', overview: 'profile', decisions: 'profile', principles: 'profile', reassess: 'profile', settings: 'settings' };
+    const activeTab = tabMap[currentScreen] || 'home';
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === activeTab));
+  }
+
+  // Browser back button
+  window.addEventListener('popstate', (e) => {
+    if (stack.length > 1) {
+      stack.pop();
+      const entry = stack[stack.length - 1];
+      renderScreen(entry, 'pop');
+    }
+  });
+
+  return { push, pop, switchTab, refresh, getStack: () => stack };
+})();
+
+/* ============================================================
+   MODULE: SCREENS — each maps cleanly to a future React component
+   ============================================================ */
+const Screens = {};
+
+// ===== HOME =====
+Screens.home = {
+  title: 'Hybrid',
+  render(ctx) {
+    const s = State.get();
+    const completed = Utils.countCompleted(s.sessions);
+    const sortedLogs = [...s.logs].sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+    const latest = sortedLogs[0];
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
+    // Determine "today's session" — first incomplete in current week, fallback to first session of Phase 1 Week 5
+    const phase1 = Plan.getPhase(1);
+    let nextSession = null;
+    let nextWeek = null;
+    let nextSessionIdx = 0;
+    if (phase1 && phase1.weeks) {
+      outer: for (const w of phase1.weeks) {
+        for (let i = 0; i < w.sessions.length; i++) {
+          const key = Utils.weekKey(1, w.num, i);
+          if (!SessionHelper.isCompleted(key)) {
+            nextSession = w.sessions[i];
+            nextWeek = w;
+            nextSessionIdx = i;
+            break outer;
+          }
+        }
+      }
+    }
+
+    // Week 5 progress for streak ring
+    const targetWeeklySessions = 6;
+    const thisWeekDone = nextWeek
+      ? nextWeek.sessions.filter((_, i) => SessionHelper.isCompleted(Utils.weekKey(1, nextWeek.num, i))).length
+      : 0;
+    const ringPct = Math.min(100, (thisWeekDone / targetWeeklySessions) * 100);
+    const ringCircumference = 2 * Math.PI * 22;
+    const ringOffset = ringCircumference - (ringCircumference * ringPct / 100);
+
+    // Today card content
+    let todayCardHtml;
+    if (nextSession && nextWeek) {
+      todayCardHtml = `
+        <button class="today-card" onclick="Router.push('session-detail', { phaseId: 1, weekNum: ${nextWeek.num}, sessionIdx: ${nextSessionIdx} }, 'Session')" style="width:100%; text-align:left; font-family:inherit; border:none; cursor:pointer; color:#f4f1ea;">
+          <div class="today-eyebrow">Up next · Week ${nextWeek.num}</div>
+          <div class="today-title">${Utils.escapeHtml(nextSession.title)}</div>
+          <div class="today-meta">${Utils.escapeHtml(nextSession.duration)}</div>
+          <div class="today-cta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Start session</span>
+          </div>
+        </button>
+      `;
+    } else {
+      todayCardHtml = `
+        <div class="today-card complete">
+          <div class="today-eyebrow">All caught up</div>
+          <div class="today-title">No pending sessions</div>
+          <div class="today-meta">Take a recovery day, or jump into next week.</div>
+          <button class="today-cta done" onclick="Router.push('phases')">
+            <span>Browse phases</span>
+          </button>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="dash-greeting">
+        <div class="eyebrow">${greet}</div>
+        <h1 class="h1">Built to <em>last</em>.</h1>
+      </div>
+
+      ${todayCardHtml}
+
+      <div class="streak-card">
+        <div class="streak-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle class="ring-bg" cx="28" cy="28" r="22"></circle>
+            <circle class="ring-fg" cx="28" cy="28" r="22"
+              stroke-dasharray="${ringCircumference.toFixed(2)}"
+              stroke-dashoffset="${ringOffset.toFixed(2)}"></circle>
+          </svg>
+          <div class="ring-text">${thisWeekDone}/${targetWeeklySessions}</div>
+        </div>
+        <div class="streak-body">
+          <div class="streak-title">Week ${nextWeek ? nextWeek.num : 5} progress</div>
+          <div class="streak-sub">${thisWeekDone} of ${targetWeeklySessions} sessions complete</div>
+        </div>
+      </div>
+
+      <div class="stats-strip">
+        <div class="stat-tile">
+          <div class="l">Sessions</div>
+          <div class="v">${completed}</div>
+          <div class="d">total done</div>
+        </div>
+        <div class="stat-tile">
+          <div class="l">Check-ins</div>
+          <div class="v">${s.logs.length}</div>
+          <div class="d">weeks logged</div>
+        </div>
+        <div class="stat-tile">
+          <div class="l">Knee</div>
+          <div class="v">${latest && latest.knee ? latest.knee : '—'}</div>
+          <div class="d">last rated</div>
+        </div>
+      </div>
+
+      <div class="quick-grid">
+        <button class="quick-tile" onclick="Router.push('phases')">
+          <div>
+            <div class="qt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="9" y1="4" x2="9" y2="20"></line></svg></div>
+            <div class="qt-title">Training phases</div>
+          </div>
+          <div class="qt-meta">5 phases · drill in</div>
+        </button>
+        <button class="quick-tile" onclick="Router.push('checkin')">
+          <div>
+            <div class="qt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+            <div class="qt-title">Weekly check-in</div>
+          </div>
+          <div class="qt-meta">2 min · log this week</div>
+        </button>
+      </div>
+
+      <h3 class="h3">Reference</h3>
+      <div class="sec-links">
+        <button class="sec-link" onclick="Router.push('overview')">12-month overview <span class="sl-chev">${Utils.chevronRight}</span></button>
+        <button class="sec-link" onclick="Router.push('decisions')">Decision framework <span class="sl-chev">${Utils.chevronRight}</span></button>
+        <button class="sec-link" onclick="Router.push('principles')">Operating principles <span class="sl-chev">${Utils.chevronRight}</span></button>
+        <button class="sec-link" onclick="Router.push('reassess')">Quarterly reassessment <span class="sl-chev">${Utils.chevronRight}</span></button>
+      </div>
+    `;
+  }
+};
+
+// ===== PHASES (list) =====
+Screens.phases = {
+  title: 'Training Phases',
+  render() {
+    const s = State.get();
+    const tiles = Plan.getPhases().map(p => {
+      const phase = Plan.getPhase(p.id);
+      const total = phase.weeks.reduce((sum, w) => sum + w.sessions.length, 0);
+      const done = phase.weeks.reduce((sum, w) => sum + w.sessions.filter((_, i) => SessionHelper.isCompleted(Utils.weekKey(p.id, w.num, i))).length, 0);
+      const statusLabel = p.status === 'current' ? 'Current' : 'Provisional';
+      const statusClass = p.status === 'current' ? 'current' : 'provisional';
+      return `
+        <button class="phase-tile" onclick="Router.push('phase-detail', { phaseId: ${p.id} }, 'Phase ${p.id}')">
+          <div class="pt-head">
+            <div class="pt-num">0${p.id}</div>
+            <div class="pt-status ${statusClass}">${statusLabel}</div>
+          </div>
+          <div class="pt-title">${p.title}</div>
+          <div class="pt-range">${p.range} · ${phase.weeks.length} wks</div>
+          <div class="pt-desc">${p.tagline}</div>
+          <div class="pt-foot"><span>${done} / ${total} sessions</span><span>→</span></div>
+        </button>
+      `;
+    }).join('');
+    return `
+      <div class="eyebrow">§ 03</div>
+      <h1 class="h1">Phases</h1>
+      <div class="sub">Tap a phase to see week breakdown.</div>
+      ${tiles}
+    `;
+  }
+};
+
+// ===== PHASE DETAIL =====
+Screens['phase-detail'] = {
+  title: 'Phase',
+  render(ctx) {
+    const phase = Plan.getPhase(ctx.phaseId);
+    if (!phase) return '<div class="empty">Phase not found.</div>';
+    const s = State.get();
+    const weeks = phase.weeks.map(w => {
+      const done = w.sessions.filter((_, i) => SessionHelper.isCompleted(Utils.weekKey(phase.id, w.num, i))).length;
+      const pct = w.sessions.length ? (done / w.sessions.length) * 100 : 0;
+      return `
+        <button class="week-tile ${w.deload ? 'deload' : ''}" onclick="Router.push('week-detail', { phaseId: ${phase.id}, weekNum: ${w.num} }, 'Week ${w.num}')">
+          <div class="wt-tag">${w.deload ? 'Deload' : 'Week'}</div>
+          <div class="wt-num">${w.num}</div>
+          <div class="wt-theme">${Utils.escapeHtml(w.theme)}</div>
+          <div class="wt-progress">
+            <span>${done}/${w.sessions.length}</span>
+            <div class="wt-bar"><div class="wt-bar-fill" style="width:${pct}%"></div></div>
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    const gates = phase.gates.map(g => `<li><span class="k">${Utils.escapeHtml(g.label)}</span><span class="v">${g.required ? 'Required' : 'Target'}</span></li>`).join('');
+
+    const provNote = phase.status !== 'current'
+      ? `<div class="callout amber"><strong>Provisional</strong>Scaffolded from assumptions about Phase 1 outcomes. Will be revised at quarterly reassessment.</div>`
+      : '';
+
+    return `
+      <div class="eyebrow">Phase ${phase.id} · ${phase.range}</div>
+      <h1 class="h1">${Utils.escapeHtml(phase.title)}</h1>
+      <div class="sub">${Utils.escapeHtml(phase.tagline)}</div>
+
+      ${provNote}
+
+      <h3 class="h3">Summary</h3>
+      <div class="card"><p style="font-size:14px;">${Utils.escapeHtml(phase.summary)}</p></div>
+
+      <h3 class="h3">Outcome gates</h3>
+      <div class="card">
+        <ul class="kv-list">${gates}</ul>
+        <p style="margin-top:10px; font-size:12px; color:var(--muted);">Miss "Required" → consolidate. Miss "Target" only → advance with lighter loading start.</p>
+      </div>
+
+      <h3 class="h3">Weeks</h3>
+      <div class="week-list">${weeks}</div>
+    `;
+  }
+};
+
+// ===== WEEK DETAIL =====
+Screens['week-detail'] = {
+  title: 'Week',
+  render(ctx) {
+    const phase = Plan.getPhase(ctx.phaseId);
+    const week = Plan.getWeek(ctx.phaseId, ctx.weekNum);
+    if (!phase || !week) return '<div class="empty">Week not found.</div>';
+
+    const sessionCards = week.sessions.map((sess, idx) => {
+      const key = Utils.weekKey(phase.id, week.num, idx);
+      const sd = SessionHelper.data(key);
+      const isDone = sd && sd.completed;
+      const isStarted = sd && sd.startedAt && !sd.completed;
+      const statusBadge = isDone
+        ? `<span class="ses-badge done">Done</span>`
+        : isStarted
+          ? `<span class="ses-badge in-progress">In progress</span>`
+          : `<span class="ses-badge pending">Pending</span>`;
+      // Day label parsed from the session title (everything before the first ·)
+      const dayLabel = sess.title.split('·')[0].trim();
+      const sessionFocus = sess.title.split('·').slice(1).join('·').trim() || sess.title;
+
+      return `
+        <button class="ses-card ${isDone ? 'is-done' : ''} ${isStarted ? 'is-started' : ''}"
+                onclick="Router.push('session-detail', { phaseId: ${phase.id}, weekNum: ${week.num}, sessionIdx: ${idx} }, '${Utils.escapeHtml(dayLabel)}')">
+          <div class="ses-day">${Utils.escapeHtml(dayLabel)}</div>
+          <div class="ses-body">
+            <div class="ses-focus">${Utils.escapeHtml(sessionFocus)}</div>
+            <div class="ses-meta">
+              <span class="ses-dur">${Utils.escapeHtml(sess.duration)}</span>
+              ${statusBadge}
+            </div>
+          </div>
+          <div class="ses-chev">${Utils.chevronRight}</div>
+        </button>
+      `;
+    }).join('');
+
+    const themeCallout = week.deload
+      ? `<div class="callout amber"><strong>Deload week</strong>${Utils.escapeHtml(week.theme)}</div>`
+      : `<div class="callout slate"><strong>Week ${week.num}</strong>${Utils.escapeHtml(week.theme)}</div>`;
+
+    const prov = week.provisional
+      ? `<div class="callout amber"><strong>Provisional</strong>Exact loads will be confirmed at quarterly reassessment.</div>`
+      : '';
+
+    // Weekly summary stats
+    const done = week.sessions.filter((_, i) => SessionHelper.isCompleted(Utils.weekKey(phase.id, week.num, i))).length;
+    const total = week.sessions.length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+
+    // Build 7-day calendar strip — map sessions to days based on title parsing
+    const dayLetters = ['M','T','W','T','F','S','S'];
+    const dayMap = { 'monday': 0, 'tuesday': 1, 'tue': 1, 'wednesday': 2, 'thursday': 3, 'thu': 3, 'friday': 4, 'saturday': 5, 'sunday': 6, 'sat': 5, 'sun': 6, 'mon': 0, 'wed': 2, 'fri': 4 };
+    const sessionsByDay = [[],[],[],[],[],[],[]];
+    week.sessions.forEach((sess, idx) => {
+      const dayPart = (sess.title.split('·')[0] || '').trim().toLowerCase().split(/\s+/)[0];
+      const dIdx = dayMap[dayPart];
+      if (dIdx !== undefined) sessionsByDay[dIdx].push({ sess, idx });
+    });
+    const todayIdx = (new Date().getDay() + 6) % 7; // 0=Mon
+    const stripHtml = dayLetters.map((letter, i) => {
+      const sessionsHere = sessionsByDay[i];
+      const hasSession = sessionsHere.length > 0;
+      const hasDone = sessionsHere.some(s => SessionHelper.isCompleted(Utils.weekKey(phase.id, week.num, s.idx)));
+      const hasStarted = sessionsHere.some(s => SessionHelper.isStarted(Utils.weekKey(phase.id, week.num, s.idx)));
+      const allDone = sessionsHere.length > 0 && sessionsHere.every(s => SessionHelper.isCompleted(Utils.weekKey(phase.id, week.num, s.idx)));
+      let cls = '';
+      if (hasSession) cls += ' has-session';
+      if (allDone) cls += ' done';
+      else if (hasStarted) cls += ' in-progress';
+      if (i === todayIdx) cls += ' today';
+      return `
+        <div class="week-strip-day${cls}">
+          <div class="wsd-label">${letter}</div>
+          <div class="wsd-dot">${hasSession && !allDone && !hasStarted ? sessionsHere.length : ''}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="eyebrow">Phase ${phase.id} · ${Utils.escapeHtml(phase.title)}</div>
+      <h1 class="h1">Week ${week.num}${week.deload ? ' · Deload' : ''}</h1>
+      <div class="sub">${total} sessions · ${done} complete · ${pct}%</div>
+
+      <div class="week-strip">${stripHtml}</div>
+
+      ${themeCallout}
+      ${prov}
+
+      <h3 class="h3">Sessions</h3>
+      <div class="ses-list">${sessionCards}</div>
+
+      <h3 class="h3">Progression rules</h3>
+      <div class="card">
+        <ul class="kv-list">
+          <li><span class="k">Last set RPE ≤ 7</span><span class="v">+2.5kg lower / +1.25–2.5 upper</span></li>
+          <li><span class="k">Last set RPE 8</span><span class="v">Hold load, repeat</span></li>
+          <li><span class="k">Last set RPE 9+</span><span class="v">Drop 5%, rebuild</span></li>
+          <li><span class="k">2× RPE 9+ in a row</span><span class="v">Auto-deload</span></li>
+        </ul>
+      </div>
+    `;
+  }
+};
+
+// ===== SESSION DETAIL =====
+Screens['session-detail'] = {
+  title: 'Session',
+  render(ctx) {
+    const phase = Plan.getPhase(ctx.phaseId);
+    const week = Plan.getWeek(ctx.phaseId, ctx.weekNum);
+    if (!phase || !week) return '<div class="empty">Session not found.</div>';
+    const sess = week.sessions[ctx.sessionIdx];
+    if (!sess) return '<div class="empty">Session not found.</div>';
+
+    const key = Utils.weekKey(phase.id, week.num, ctx.sessionIdx);
+    const sd = SessionHelper.data(key);
+    const isDone = sd && sd.completed;
+    const isStarted = sd && sd.startedAt && !sd.completed;
+    const showForm = !!Screens['session-detail']._showForm;
+
+    const items = sess.items.map(it => `
+      <div class="exercise">
+        <div class="e-num">${Utils.escapeHtml(it.num)}</div>
+        <div class="e-name">${Utils.escapeHtml(it.name)}${it.note ? `<small>${Utils.escapeHtml(it.note).replace(/\n/g, '<br>')}</small>` : ''}</div>
+        <div class="e-meta">
+          <div class="e-sets">${Utils.escapeHtml(it.sets)}</div>
+          <div class="e-rpe ${it.tag || ''}">${Utils.escapeHtml(it.rpe)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Action bar — three states: not started, in progress, completed
+    let actionBar = '';
+    if (isDone) {
+      const completedRow = `
+        <div class="card" style="margin-bottom:14px;">
+          <div class="eyebrow" style="color:var(--moss); margin-bottom:8px;">✓ Completed</div>
+          <ul class="kv-list">
+            ${sd.completedAt ? `<li><span class="k">Completed</span><span class="v">${new Date(sd.completedAt).toLocaleString()}</span></li>` : ''}
+            ${sd.startedAt && sd.completedAt ? `<li><span class="k">Duration</span><span class="v">${Utils.formatDuration(sd.startedAt, sd.completedAt)}</span></li>` : ''}
+            ${sd.quality != null ? `<li><span class="k">Session quality</span><span class="v">${sd.quality}/5</span></li>` : ''}
+            ${sd.energy != null ? `<li><span class="k">Energy level</span><span class="v">${sd.energy}/5</span></li>` : ''}
+            ${sd.recovery != null ? `<li><span class="k">Recovery level</span><span class="v">${sd.recovery}/5</span></li>` : ''}
+            ${sd.notes ? `<li><span class="k">Notes</span><span class="v" style="text-align:right; max-width:60%;">${Utils.escapeHtml(sd.notes)}</span></li>` : ''}
+          </ul>
+          <button class="btn-secondary" style="margin-top:12px;" onclick="if(confirm('Reopen this session?')){State.actions.uncompleteSession('${key}'); Router.refresh();}">Reopen session</button>
+        </div>
+      `;
+      actionBar = completedRow;
+    } else if (showForm) {
+      actionBar = `
+        <div class="card" style="margin-bottom:14px;">
+          <div class="eyebrow" style="margin-bottom:10px;">How did it go?</div>
+          <div class="form-row">
+            <label>Session quality · how well did you train?</label>
+            <div class="rating-row" id="rate-quality"></div>
+          </div>
+          <div class="form-row">
+            <label>Energy level · how energised did you feel?</label>
+            <div class="rating-row" id="rate-energy"></div>
+          </div>
+          <div class="form-row">
+            <label>Recovery level · how recovered did you feel coming in?</label>
+            <div class="rating-row" id="rate-recovery"></div>
+          </div>
+          <div class="form-row">
+            <label>Notes (optional)</label>
+            <textarea id="ses-notes" placeholder="Anything worth flagging — load felt heavy, knee twinge, breakthrough..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="Screens['session-detail'].submit('${key}')">Save & complete</button>
+          <button class="btn-secondary" style="margin-top:8px;" onclick="Screens['session-detail']._showForm=false; Router.refresh();">Cancel</button>
+        </div>
+      `;
+    } else if (isStarted) {
+      actionBar = `
+        <div class="card" style="margin-bottom:14px;">
+          <div class="eyebrow" style="color:var(--rust); margin-bottom:8px;">▶ In progress</div>
+          <ul class="kv-list">
+            <li><span class="k">Started</span><span class="v" id="started-at-text">${new Date(sd.startedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></li>
+            <li><span class="k">Elapsed</span><span class="v" id="elapsed-text">—</span></li>
+          </ul>
+          <button class="btn-primary" style="margin-top:12px;" onclick="Screens['session-detail']._showForm=true; Router.refresh();">Complete session</button>
+        </div>
+      `;
+    } else {
+      actionBar = `
+        <button class="btn-primary" style="margin-bottom:14px;" onclick="State.actions.startSession('${key}'); Router.refresh();">Start session</button>
+      `;
+    }
+
+    return `
+      <div class="eyebrow">Phase ${phase.id} · Week ${week.num}</div>
+      <h1 class="h1">${Utils.escapeHtml(sess.title)}</h1>
+      <div class="sub">${Utils.escapeHtml(sess.duration)}</div>
+
+      ${actionBar}
+
+      <h3 class="h3">Workout</h3>
+      <div class="session" style="margin-bottom:14px;">
+        ${items}
+      </div>
+
+      <h3 class="h3">RPE quick reference</h3>
+      <div class="card">
+        <ul class="kv-list">
+          <li><span class="k">RPE 6</span><span class="v">4 reps in reserve</span></li>
+          <li><span class="k">RPE 7</span><span class="v">3 reps in reserve</span></li>
+          <li><span class="k">RPE 8</span><span class="v">2 reps in reserve</span></li>
+          <li><span class="k">RPE 9</span><span class="v">1 rep in reserve — back off</span></li>
+        </ul>
+      </div>
+    `;
+  },
+  _showForm: false,
+  _ratingState: { quality: null, energy: null, recovery: null },
+  _lastKey: null,
+  onShow(ctx, el) {
+    const key = Utils.weekKey(ctx.phaseId, ctx.weekNum, ctx.sessionIdx);
+    // Reset transient form state when entering a new session
+    if (Screens['session-detail']._lastKey !== key) {
+      Screens['session-detail']._showForm = false;
+      Screens['session-detail']._ratingState = { quality: null, energy: null, recovery: null };
+      Screens['session-detail']._lastKey = key;
+    }
+    // Render rating selectors if the form is shown
+    if (Screens['session-detail']._showForm) {
+      ['quality','energy','recovery'].forEach(field => {
+        const host = el.querySelector('#rate-' + field);
+        if (!host) return;
+        host.innerHTML = [1,2,3,4,5].map(n => {
+          const sel = Screens['session-detail']._ratingState[field] === n ? ' selected' : '';
+          return `<button type="button" class="rating-btn${sel}" data-field="${field}" data-val="${n}">${n}</button>`;
+        }).join('');
+        host.querySelectorAll('.rating-btn').forEach(b => b.addEventListener('click', () => {
+          Screens['session-detail']._ratingState[b.dataset.field] = parseInt(b.dataset.val);
+          host.querySelectorAll('.rating-btn').forEach(x => x.classList.remove('selected'));
+          b.classList.add('selected');
+        }));
+      });
+    }
+    // Elapsed-time ticker for in-progress sessions
+    const sd = SessionHelper.data(key);
+    if (sd && sd.startedAt && !sd.completed) {
+      const tick = () => {
+        const elapsed = el.querySelector('#elapsed-text');
+        if (!elapsed) return;
+        const ms = Date.now() - new Date(sd.startedAt).getTime();
+        const m = Math.floor(ms / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        elapsed.textContent = m + 'm ' + s.toString().padStart(2, '0') + 's';
+        if (el.isConnected) setTimeout(tick, 1000);
+      };
+      tick();
+    }
+  },
+  submit(key) {
+    const r = Screens['session-detail']._ratingState;
+    const notes = document.getElementById('ses-notes')?.value || '';
+    State.actions.completeSession(key, {
+      quality: r.quality,
+      energy: r.energy,
+      recovery: r.recovery,
+      notes
+    });
+    // Reset transient form state
+    Screens['session-detail']._showForm = false;
+    Screens['session-detail']._ratingState = { quality: null, energy: null, recovery: null };
+    Screens['session-detail']._lastKey = null;
+    Router.refresh();
+  }
+};
+
+// ===== TRACKING (menu hub) =====
+Screens.tracking = {
+  title: 'Tracking',
+  render() {
+    const s = State.get();
+    const sessionsDone = Utils.countCompleted(s.sessions);
+    return `
+      <div class="eyebrow">§ 04</div>
+      <h1 class="h1">Tracking</h1>
+      <div class="sub">Weekly metrics drive the plan.</div>
+
+      <button class="list-card" onclick="Router.push('checkin')">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+        <div class="lc-body">
+          <div class="lc-title">Weekly check-in</div>
+          <div class="lc-desc">BW, RHR, sleep, knee — 2 min</div>
+        </div>
+        <div class="lc-chev">${Utils.chevronRight}</div>
+      </button>
+
+      <button class="list-card" onclick="Router.push('metrics')">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="9" y1="9" x2="9" y2="15"></line><line x1="15" y1="9" x2="15" y2="15"></line><line x1="12" y1="11" x2="12" y2="15"></line></svg></div>
+        <div class="lc-body">
+          <div class="lc-title">Key metrics</div>
+          <div class="lc-desc">${s.logs.length} weeks logged · ${sessionsDone} sessions done</div>
+        </div>
+        <div class="lc-chev">${Utils.chevronRight}</div>
+      </button>
+
+      <button class="list-card" onclick="Router.push('trends')">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+        <div class="lc-body">
+          <div class="lc-title">Trends</div>
+          <div class="lc-desc">Charts over time</div>
+        </div>
+        <div class="lc-chev">${Utils.chevronRight}</div>
+      </button>
+
+      <button class="list-card" onclick="Router.push('log')">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>
+        <div class="lc-body">
+          <div class="lc-title">Log history</div>
+          <div class="lc-desc">All past check-ins</div>
+        </div>
+        <div class="lc-chev">${Utils.chevronRight}</div>
+      </button>
+
+      <div class="callout">
+        <strong>Why this matters</strong>
+        RHR is the earliest-warning recovery metric. Bodyweight is trend-only. Knee rating goes in every week even when zero.
+      </div>
+    `;
+  }
+};
+
+// ===== CHECK-IN =====
+Screens.checkin = {
+  title: 'Weekly Check-in',
+  render() {
+    return `
+      <div class="eyebrow">§ 04 · A</div>
+      <h1 class="h1">Check-in</h1>
+      <div class="sub">2 minutes a week. Set a Sunday evening reminder.</div>
+
+      <div class="form-card">
+        <div class="form-row"><label>Week ending</label><input type="date" id="f-date"></div>
+        <div class="form-row"><label>Bodyweight (kg)</label><input type="number" step="0.1" id="f-bw" inputmode="decimal" placeholder="80.2"></div>
+        <div class="form-row"><label>Resting HR (bpm)</label><input type="number" id="f-rhr" inputmode="numeric" placeholder="56"></div>
+        <div class="form-row"><label>Avg RPE (1–10)</label><input type="number" step="0.1" min="1" max="10" id="f-rpe" inputmode="decimal" placeholder="7.5"></div>
+        <div class="form-row"><label>Sleep (1–10)</label><input type="number" step="0.1" min="1" max="10" id="f-sleep" inputmode="decimal" placeholder="8"></div>
+        <div class="form-row"><label>Knee (0–10)</label><input type="number" step="0.5" min="0" max="10" id="f-knee" inputmode="decimal" placeholder="1"></div>
+        <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Anything worth flagging…"></textarea></div>
+        <button class="btn-primary" onclick="Screens.checkin.save()">Save week</button>
+      </div>
+    `;
+  },
+  onShow(ctx, el) {
+    const d = el.querySelector('#f-date');
+    if (d && !d.value) d.valueAsDate = new Date();
+  },
+  save() {
+    const get = id => document.getElementById(id)?.value || '';
+    const date = get('f-date');
+    if (!date) { alert('Please set the week-ending date.'); return; }
+    State.actions.addLog({
+      date,
+      bw: get('f-bw'),
+      rhr: get('f-rhr'),
+      rpe: get('f-rpe'),
+      sleep: get('f-sleep'),
+      knee: get('f-knee'),
+      notes: get('f-notes')
+    });
+    alert('Saved.');
+    Router.pop();
+  }
+};
+
+// ===== METRICS =====
+Screens.metrics = {
+  title: 'Key Metrics',
+  render() {
+    const s = State.get();
+    const sorted = [...s.logs].sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+    const latest = sorted[sorted.length-1];
+    const first = sorted[0];
+
+    let bwDelta = 'vs. baseline', bwClass = '';
+    if (latest && first && first !== latest && first.bw && latest.bw) {
+      const d = (parseFloat(latest.bw) - parseFloat(first.bw)).toFixed(1);
+      bwDelta = (d >= 0 ? '+' : '') + d + ' kg';
+      bwClass = Math.abs(d) > 2 ? 'up' : '';
+    }
+    let rhrDelta = 'vs. 4-wk avg', rhrClass = '';
+    if (sorted.length >= 5 && latest?.rhr) {
+      const prior = sorted.slice(-5,-1).map(l => parseFloat(l.rhr)).filter(n => !isNaN(n));
+      if (prior.length) {
+        const avg = prior.reduce((a,b)=>a+b,0)/prior.length;
+        const d = (parseFloat(latest.rhr) - avg).toFixed(1);
+        rhrDelta = (d >= 0 ? '+' : '') + d;
+        rhrClass = d >= 5 ? 'up' : '';
+      }
+    }
+    const sleepNums = sorted.slice(-4).map(l => parseFloat(l.sleep)).filter(n => !isNaN(n));
+    const avgSleep = sleepNums.length ? (sleepNums.reduce((a,b)=>a+b,0)/sleepNums.length).toFixed(1) : '—';
+    const sessionsDone = Utils.countCompleted(s.sessions);
+    const last4 = sorted.slice(-4).length;
+
+    return `
+      <div class="eyebrow">§ 04 · B</div>
+      <h1 class="h1">Key metrics</h1>
+      <div class="sub">Snapshot of recent state.</div>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="l">Weeks logged</div><div class="v">${s.logs.length}</div><div class="d">total</div></div>
+        <div class="stat-card"><div class="l">Adherence</div><div class="v">${last4}/4</div><div class="d">last 4 wks</div></div>
+        <div class="stat-card"><div class="l">Latest BW</div><div class="v">${latest?.bw || '—'}</div><div class="d ${bwClass}">${bwDelta}</div></div>
+        <div class="stat-card"><div class="l">Latest RHR</div><div class="v">${latest?.rhr || '—'}</div><div class="d ${rhrClass}">${rhrDelta}</div></div>
+        <div class="stat-card"><div class="l">Avg sleep</div><div class="v">${avgSleep}</div><div class="d">4-wk avg</div></div>
+        <div class="stat-card"><div class="l">Sessions</div><div class="v">${sessionsDone}</div><div class="d">total done</div></div>
+      </div>
+
+      <div class="card">
+        <h4 style="font-family:var(--mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--rust);margin-bottom:10px;">What these tell us</h4>
+        <p style="font-size:13px;margin-bottom:8px;"><strong>RHR</strong> · +5 bpm vs. baseline = under-recovered.</p>
+        <p style="font-size:13px;margin-bottom:8px;"><strong>BW</strong> · drift &gt;2 kg / 4 wks unintended = nutrition audit.</p>
+        <p style="font-size:13px;margin-bottom:8px;"><strong>Sleep</strong> · two weeks &lt;7 = cap intensity, audit.</p>
+        <p style="font-size:13px;"><strong>Adherence</strong> · 4/4 logging keeps planning accurate.</p>
+      </div>
+    `;
+  }
+};
+
+// ===== TRENDS =====
+Screens.trends = {
+  title: 'Trends',
+  range: 'all',
+  render() {
+    const range = this.range;
+    return `
+      <div class="eyebrow">§ 04 · C</div>
+      <h1 class="h1">Trends</h1>
+      <div class="sub">Direction beats single readings.</div>
+
+      <div class="chart-filter">
+        <button class="${range==='4w'?'active':''}" onclick="Screens.trends.setRange('4w')">4 wks</button>
+        <button class="${range==='12w'?'active':''}" onclick="Screens.trends.setRange('12w')">12 wks</button>
+        <button class="${range==='all'?'active':''}" onclick="Screens.trends.setRange('all')">All</button>
+      </div>
+
+      <div class="chart-card"><h5>Bodyweight</h5><canvas class="chart-canvas" id="ch-bw"></canvas></div>
+      <div class="chart-card"><h5>Resting HR</h5><canvas class="chart-canvas" id="ch-rhr"></canvas></div>
+      <div class="chart-card"><h5>Sleep score</h5><canvas class="chart-canvas" id="ch-sleep"></canvas></div>
+      <div class="chart-card"><h5>Knee rating</h5><canvas class="chart-canvas" id="ch-knee"></canvas></div>
+    `;
+  },
+  setRange(r) { this.range = r; Router.refresh(); },
+  onShow() { setTimeout(() => Screens.trends.drawAll(), 50); },
+  drawAll() {
+    const s = State.get();
+    const sorted = [...s.logs].sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+    let data = sorted;
+    if (Screens.trends.range === '4w') data = sorted.slice(-4);
+    if (Screens.trends.range === '12w') data = sorted.slice(-12);
+    Screens.trends.draw('ch-bw', data, 'bw', '#b04a2e');
+    Screens.trends.draw('ch-rhr', data, 'rhr', '#2a3a44');
+    Screens.trends.draw('ch-sleep', data, 'sleep', '#4a5d3a');
+    Screens.trends.draw('ch-knee', data, 'knee', '#c89a3a');
+  },
+  draw(canvasId, data, key, color) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth;
+    const cssH = 160;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.height = cssH + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const points = data.map(d => ({ date: d.date, val: parseFloat(d[key]) })).filter(p => !isNaN(p.val));
+    if (points.length < 2) {
+      ctx.fillStyle = '#6a665d';
+      ctx.font = '11px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center';
+      ctx.fillText(points.length === 0 ? 'No data — log check-ins' : 'Need 2+ entries', cssW/2, cssH/2);
+      return;
+    }
+
+    const pad = { l: 36, r: 16, t: 16, b: 24 };
+    const w = cssW - pad.l - pad.r;
+    const h = cssH - pad.t - pad.b;
+    const vals = points.map(p => p.val);
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const range = max - min || 1;
+    const yMin = min - range * 0.15, yMax = max + range * 0.15;
+
+    ctx.strokeStyle = '#cbc3b3';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, pad.t + h);
+    ctx.lineTo(pad.l + w, pad.t + h);
+    ctx.stroke();
+
+    ctx.fillStyle = '#6a665d';
+    ctx.font = '9px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'right';
+    for (let i = 0; i < 3; i++) {
+      const yVal = yMin + (yMax - yMin) * (1 - i/2);
+      const y = pad.t + h * (i/2);
+      ctx.fillText(yVal.toFixed(1), pad.l - 6, y + 3);
+      if (i > 0) {
+        ctx.strokeStyle = '#ebe6db';
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + w, y);
+        ctx.stroke();
+      }
+    }
+
+    ctx.fillStyle = color + '22';
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = pad.l + (i / (points.length - 1)) * w;
+      const y = pad.t + h - ((p.val - yMin) / (yMax - yMin)) * h;
+      if (i === 0) { ctx.moveTo(x, pad.t + h); ctx.lineTo(x, y); }
+      else ctx.lineTo(x, y);
+    });
+    ctx.lineTo(pad.l + w, pad.t + h);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = pad.l + (i / (points.length - 1)) * w;
+      const y = pad.t + h - ((p.val - yMin) / (yMax - yMin)) * h;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    points.forEach((p, i) => {
+      const x = pad.l + (i / (points.length - 1)) * w;
+      const y = pad.t + h - ((p.val - yMin) / (yMax - yMin)) * h;
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+    });
+
+    ctx.fillStyle = '#6a665d';
+    ctx.textAlign = 'center';
+    const labels = points.length <= 4 ? points.map((_, i) => i) : [0, Math.floor((points.length-1)/2), points.length-1];
+    labels.forEach(i => {
+      const x = pad.l + (i / (points.length - 1)) * w;
+      const d = points[i].date;
+      ctx.fillText(d.length >= 10 ? d.substring(5) : d, x, pad.t + h + 16);
+    });
+  }
+};
+
+// ===== LOG HISTORY =====
+Screens.log = {
+  title: 'Log History',
+  render() {
+    const s = State.get();
+    if (s.logs.length === 0) {
+      return `<div class="eyebrow">§ 04 · D</div><h1 class="h1">Log history</h1><div class="empty">No entries yet. <br><br>Add your first check-in from Tracking.</div>`;
+    }
+    const sorted = [...s.logs].sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+    const rows = sorted.map(l => {
+      const idx = s.logs.indexOf(l);
+      return `<tr>
+        <td>${Utils.escapeHtml(l.date)}</td>
+        <td>${Utils.escapeHtml(l.bw || '—')}</td>
+        <td>${Utils.escapeHtml(l.rhr || '—')}</td>
+        <td>${Utils.escapeHtml(l.sleep || '—')}</td>
+        <td>${Utils.escapeHtml(l.knee || '—')}</td>
+        <td class="del" onclick="if(confirm('Delete?')){State.actions.deleteLog(${idx}); Router.refresh();}">×</td>
+      </tr>`;
+    }).join('');
+    return `
+      <div class="eyebrow">§ 04 · D</div>
+      <h1 class="h1">Log history</h1>
+      <div class="sub">${s.logs.length} entries</div>
+      <div class="card" style="padding:10px;">
+        <table class="log-table">
+          <thead><tr><th>Week</th><th>BW</th><th>RHR</th><th>Sleep</th><th>Knee</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+};
+
+// ===== PROFILE =====
+Screens.profile = {
+  title: 'Profile',
+  render() {
+    return `
+      <div class="eyebrow">§ 01</div>
+      <h1 class="h1">Profile</h1>
+      <div class="sub">Baseline at week 4. Updated at each quarterly reassessment.</div>
+
+      <h3 class="h3">Physical baseline</h3>
+      <div class="card"><ul class="kv-list">
+        <li><span class="k">Age / BW</span><span class="v">28 / 80 kg</span></li>
+        <li><span class="k">Squat top set</span><span class="v">75–80 kg × 5</span></li>
+        <li><span class="k">Bench top set</span><span class="v">50 kg</span></li>
+        <li><span class="k">Hex deadlift</span><span class="v">70–75 kg</span></li>
+        <li><span class="k">Continuous swim</span><span class="v">~200m</span></li>
+        <li><span class="k">Sleep</span><span class="v">7–8 h</span></li>
+      </ul></div>
+
+      <h3 class="h3">Injury status</h3>
+      <div class="card">
+        <ul class="kv-list">
+          <li><span class="k">Left patellar tendon</span><span class="v">Mild, improving</span></li>
+          <li><span class="k">Right knee (post-marathon)</span><span class="v">Resolved</span></li>
+          <li><span class="k">Reverse Nordic response</span><span class="v">Positive</span></li>
+        </ul>
+        <div class="callout"><strong>Watchpoint</strong>Patellar work stays permanently — load management tool, not rehab.</div>
+      </div>
+
+      <h3 class="h3">Goals (ranked)</h3>
+      <div class="card"><ul class="kv-list">
+        <li><span class="k">1 · Anchor</span><span class="v">1:40 half · Dec '26</span></li>
+        <li><span class="k">2 · Swim</span><span class="v">2.5 km continuous</span></li>
+        <li><span class="k">3 · Ski</span><span class="v">Ready Nov '26</span></li>
+        <li><span class="k">4 · Through-line</span><span class="v">Cardio + functional strength</span></li>
+        <li><span class="k">Stretch</span><span class="v">1:35 half</span></li>
+      </ul></div>
+
+      <h3 class="h3">Lifestyle constraints</h3>
+      <div class="card"><ul class="kv-list">
+        <li><span class="k">Gym days</span><span class="v">Mon/Tue/Thu/Fri</span></li>
+        <li><span class="k">Saturday</span><span class="v">Golf (flex)</span></li>
+        <li><span class="k">Pool</span><span class="v">20 m</span></li>
+        <li><span class="k">October</span><span class="v">10d Africa — deload</span></li>
+        <li><span class="k">Big variable</span><span class="v">Move abroad 2–3 mo</span></li>
+      </ul></div>
+
+      <h3 class="h3">Motivational profile</h3>
+      <div class="card"><p style="font-size:13.5px;">High intrinsic adherence. Thrives on 6–8 week blocks with measurable mini-goals. Heavy Monday leg day preferred — hardest done first. Welcomes variety between blocks, not within. Fiancée trains alongside in pool at weekends — adherence asset through relocation.</p></div>
+    `;
+  }
+};
+
+// ===== OVERVIEW =====
+Screens.overview = {
+  title: 'Overview',
+  render() {
+    const rows = Plan.getPhases().map(p => `
+      <div class="phase-row">
+        <div class="when"><span class="num">0${p.id}</span>${p.range}</div>
+        <div>
+          <h3>${Utils.escapeHtml(p.title)}</h3>
+          <div class="tags">${p.tags.map((t, i) => `<span class="tag ${['','moss','ochre','slate'][i%4]}">${Utils.escapeHtml(t)}</span>`).join('')}</div>
+          <p>${Utils.escapeHtml(p.summary)}</p>
+        </div>
+      </div>
+    `).join('');
+    return `
+      <div class="eyebrow">§ 02</div>
+      <h1 class="h1">Overview</h1>
+      <div class="sub">12-month phase architecture · outcome-gated</div>
+      ${rows}
+      <div class="callout">
+        <strong>Why phases not weeks</strong>
+        A week-by-week plan written 12 months out is fiction. Phase 1 is locked; Phases 2–5 are provisional — rewritten from your data at each quarterly checkpoint.
+      </div>
+    `;
+  }
+};
+
+// ===== DECISIONS =====
+Screens.decisions = {
+  title: 'Decisions',
+  render() {
+    const items = [
+      { s: 'Scenario A · Patellar tendon flare', h: 'Left knee sensitivity returns to "noticeable in daily life"', t: 'Drop squat & lunge loads 25% for 1 week. Replace BSS with Spanish squats & ISO holds. Do not stop training — load management beats rest. Reverse Nordics stay.', r: 'Pain ≤3/10 during activity, gone in 24h = modified training. >3/10 or lingering = physio.' },
+      { s: 'Scenario B · Limited/no gym', h: 'Hotel gym only, or no gym at all', t: '3× per week minimum. Hotel: 4-day with DBs. No gym: 3× bodyweight full-body. Swim if available.', r: 'Re-entry: drop loads 10% week 1 back, normal week 2.' },
+      { s: 'Scenario C · Strength plateau 3+ weeks', h: 'Loads stuck despite RPE ≤8', t: 'Almost always recovery or technique. Audit sleep & nutrition first. Then vary reps/sets. Then full deload. Only then change exercise.', r: "Don't chase load before checking inputs." },
+      { s: 'Scenario D · Move abroad mid-phase', h: 'Relocation falls in any phase', t: '2-week transition: maintenance only. 3 strength full-body, 2 swims, walking. Once new gym/pool sorted, audit & revise next phase.', r: "Honesty about timing beats pretending nothing changed." },
+      { s: 'Scenario E · Sleep <7h for 7+ days', h: 'Work crunch, jet lag, life', t: 'Cap all sessions at RPE 7 until sleep recovers. Skip Fri finisher. Keep showing up.', r: 'Adaptation = recovery. Insufficient recovery + same training = injury.' },
+      { s: 'Scenario F · Running ramp triggers pain', h: 'Shin/calf/knee pain on consecutive runs (Phase 2+)', t: 'One missed run = OK to push. Two consecutive with same-location pain = stop running 7 days, swim/bike. Re-enter at 50%.', r: '10%/wk increase max. Hard 40 km/wk cap year one.' },
+      { s: 'Scenario G · Golf wipes out Saturday', h: 'Played 18, no swim', t: 'Fine. Saturday is flex. Do not try to make up the swim midweek.', r: 'If you played golf or trained, the day counted.' }
+    ];
+    return `
+      <div class="eyebrow">§ 05</div>
+      <h1 class="h1">Decisions</h1>
+      <div class="sub">If/then for common disruptions.</div>
+      ${items.map(d => `
+        <div class="decision-card">
+          <div class="scen">${Utils.escapeHtml(d.s)}</div>
+          <h4>${Utils.escapeHtml(d.h)}</h4>
+          <p>${Utils.escapeHtml(d.t)}</p>
+          <span class="rule">${Utils.escapeHtml(d.r)}</span>
+        </div>
+      `).join('')}
+    `;
+  }
+};
+
+// ===== PRINCIPLES =====
+Screens.principles = {
+  title: 'Principles',
+  render() {
+    const items = [
+      ['i.', 'Tendons set the ceiling', 'Muscle adapts in weeks, connective tissue in months. Every progression paced to the slower system. Patellar work permanent.'],
+      ['ii.', 'Two strength sessions per week, always', 'No matter the phase, how much running or swimming, or how busy. Two real sessions or you lose the asset that makes everything possible.'],
+      ['iii.', 'Mobility is non-optional', 'Reverse Nordic, hip flow, t-spine. Not finishers — load. Picking-up-the-kids-without-stiffness lives or dies on this.'],
+      ['iv.', 'Aerobic base serves longevity first', 'Z2 capacity is the through-line — cardiac, cognitive, metabolic. Half marathon is downstream, not the point.'],
+      ['v.', 'Run volume has hard ceilings', '10%/week increase max. 40 km/wk cap year one. No upside in being the exception.'],
+      ['vi.', 'Mandatory deload every 4th week', 'The point is you don\'t see the need until you\'ve missed one and broken down. Calendared, not negotiated.'],
+      ['vii.', 'Adaptation = stimulus + recovery', 'Both halves matter. If sleep/stress/nutrition drop, training output drops automatically.'],
+      ['viii.', 'Saturday is flex, forever', 'Golf is part of who you are. The plan supports the life, not the other way.']
+    ];
+    return `
+      <div class="eyebrow">§ 06</div>
+      <h1 class="h1">Principles</h1>
+      <div class="sub">The non-negotiables.</div>
+      <div class="card">
+        ${items.map(([r,h,p]) => `
+          <div class="principle"><div class="roman">${r}</div><div><h4>${Utils.escapeHtml(h)}</h4><p>${Utils.escapeHtml(p)}</p></div></div>
+        `).join('')}
+      </div>
+    `;
+  }
+};
+
+// ===== REASSESSMENT =====
+Screens.reassess = {
+  title: 'Reassessment',
+  render() {
+    const s = State.get();
+    const sections = [
+      { t: 'Performance & body', qs: [
+        ['q1','Current 5RM loads on squat, deadlift, bench? Change this quarter?'],
+        ['q2','Longest continuous swim, at what perceived effort?'],
+        ['q3','If running — longest comfortable Z2 run, at what pace?'],
+        ['q4','Body composition shift (eyeballed)?'],
+        ['q5','Niggles? Where, when, what makes worse / helps?']
+      ]},
+      { t: 'Recovery & lifestyle', qs: [
+        ['q6','Average sleep this quarter? What compromised it?'],
+        ['q7','Nutrition adherence — pre-workout, post-swim refeed?'],
+        ['q8','Stress load — work, travel, relationships?']
+      ]},
+      { t: 'Adherence & response', qs: [
+        ['q9','% of prescribed sessions completed?'],
+        ['q10','Most-looked-forward-to sessions? Grind sessions?'],
+        ['q11','Exercises quietly avoided?'],
+        ['q12','What did I learn about my body that I didn\'t know at start?']
+      ]},
+      { t: 'Goals & context', qs: [
+        ['q13','Anchor goals still right?'],
+        ['q14','Move status & next 12 weeks access picture?'],
+        ['q15','One change you\'d make to the last 12 weeks?']
+      ]}
+    ];
+    const sectionHtml = sections.map(sec => `
+      <div class="reassess-section">
+        <h3 class="h3">${Utils.escapeHtml(sec.t)}</h3>
+        <div class="card">
+          ${sec.qs.map(([qid, txt]) => `
+            <div class="reassess-q">
+              <span class="qnum">${qid.toUpperCase()}</span>
+              <p>${Utils.escapeHtml(txt)}</p>
+              <textarea data-q="${qid}">${Utils.escapeHtml(s.reassess[qid] || '')}</textarea>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+    return `
+      <div class="eyebrow">§ 07</div>
+      <h1 class="h1">Reassessment</h1>
+      <div class="sub">Every 12 weeks. Answers save as you type.</div>
+      ${sectionHtml}
+      <div class="callout">
+        <strong>Bring it back</strong>
+        At quarter-end, export your data and send to the coach. Next phase rebuilt from actual data, not assumptions from 12 weeks ago.
+      </div>
+    `;
+  },
+  onShow(ctx, el) {
+    el.querySelectorAll('[data-q]').forEach(ta => {
+      ta.addEventListener('input', () => { State.actions.setReassess(ta.dataset.q, ta.value); });
+    });
+  }
+};
+
+// ===== SETTINGS =====
+Screens.settings = {
+  title: 'Settings',
+  render() {
+    const s = State.get();
+    const currentTheme = localStorage.getItem('htp_theme') || 'auto';
+    return `
+      <div class="eyebrow">§ 08</div>
+      <h1 class="h1">Settings</h1>
+      <div class="sub">Your data lives on this device only.</div>
+
+      <div class="settings-section">
+        <h3 class="h3">Appearance</h3>
+        <div class="settings-group">
+          <div class="settings-row" style="cursor:default;">
+            <span>Theme</span>
+            <div class="theme-toggle">
+              <button class="${currentTheme === 'light' ? 'active' : ''}" onclick="Screens.settings.setTheme('light')">Light</button>
+              <button class="${currentTheme === 'dark' ? 'active' : ''}" onclick="Screens.settings.setTheme('dark')">Dark</button>
+              <button class="${currentTheme === 'auto' ? 'active' : ''}" onclick="Screens.settings.setTheme('auto')">Auto</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="h3">Data</h3>
+        <div class="settings-group">
+          <button class="settings-row" onclick="Screens.settings.exportJSON()">
+            <span>Export data</span>
+            <span class="sr-meta">JSON</span>
+          </button>
+          <button class="settings-row" onclick="document.getElementById('import-input').click()">
+            <span>Import data</span>
+            <span class="sr-meta">JSON</span>
+          </button>
+          <input type="file" id="import-input" accept=".json" style="display:none" onchange="Screens.settings.importJSON(event)">
+          <button class="settings-row danger" onclick="Screens.settings.resetAll()">
+            <span>Reset all data</span>
+            <span class="sr-meta">⚠</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="h3">Stored</h3>
+        <div class="settings-group">
+          <div class="settings-row" style="cursor:default;">
+            <span>Weekly check-ins</span>
+            <span class="sr-meta">${Database.tables.weeklyCheckins.all().length}</span>
+          </div>
+          <div class="settings-row" style="cursor:default;">
+            <span>Sessions tracked</span>
+            <span class="sr-meta">${Database.tables.sessions.all().length}</span>
+          </div>
+          <div class="settings-row" style="cursor:default;">
+            <span>Session logs</span>
+            <span class="sr-meta">${Database.tables.sessionLogs.all().length}</span>
+          </div>
+          <div class="settings-row" style="cursor:default;">
+            <span>Reassessments</span>
+            <span class="sr-meta">${Database.tables.reassessments.all().length}</span>
+          </div>
+          <div class="settings-row" style="cursor:default;">
+            <span>Wearable readings</span>
+            <span class="sr-meta">${Database.tables.wearableReadings.all().length}</span>
+          </div>
+          <div class="settings-row" style="cursor:default;">
+            <span>AI recommendations</span>
+            <span class="sr-meta">${Database.tables.aiRecommendations.all().length}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="h3">About</h3>
+        <div class="settings-group">
+          <div class="settings-row" style="cursor:default;">
+            <span>Schema version</span>
+            <span class="sr-meta">v4 · structured</span>
+          </div>
+          <div class="settings-row" style="cursor:default;">
+            <span>Version</span>
+            <span class="sr-meta">4.0</span>
+          </div>
+          <div class="settings-row" style="cursor:default;">
+            <span>Phase architecture</span>
+            <span class="sr-meta">52 weeks</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>About this app</strong>
+        Fully offline. No accounts, no servers, no tracking. Export your data regularly to back up — especially before the move abroad. localStorage can be cleared by the browser if you go months without opening the app.
+      </div>
+    `;
+  },
+  exportJSON() {
+    const data = Database.services.exportAll();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'hybrid-training-v4-' + new Date().toISOString().substring(0,10) + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+  importJSON(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!confirm('Replace your current data with this file?')) return;
+        Database.services.importAll(data);
+        alert('Imported.');
+        Router.refresh();
+      } catch (err) { alert('Not valid JSON.'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  },
+  resetAll() {
+    if (!confirm('Delete ALL data? This cannot be undone.')) return;
+    if (!confirm('Are you absolutely sure?')) return;
+    State.actions.resetAll();
+    Router.refresh();
+    alert('All data cleared.');
+  },
+  setTheme(theme) {
+    localStorage.setItem('htp_theme', theme);
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    // Update theme-color meta for iOS chrome
+    const dark = theme === 'dark' || (theme === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', dark ? '#14110d' : '#f4f1ea');
+    Router.refresh();
+  }
+};
+
+/* ============================================================
+   EXPOSE TO GLOBAL — inline onclick handlers run in window scope
+   ============================================================ */
+window.Storage = Storage;
+window.Database = Database;
+window.State = State;
+window.Utils = Utils;
+window.Plan = Plan;
+window.Router = Router;
+window.Screens = Screens;
+window.SessionHelper = SessionHelper;
+
+/* ============================================================
+   BOOTSTRAP
+   ============================================================ */
+(function init() {
+  // Apply saved theme preference
+  const savedTheme = localStorage.getItem('htp_theme');
+  if (savedTheme && savedTheme !== 'auto') {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+  // Sync theme-color meta on first load
+  const isDark = (savedTheme === 'dark') ||
+    (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.setAttribute('content', isDark ? '#14110d' : '#f4f1ea');
+
+  // Start at home, or from hash if present
+  const hash = (location.hash || '').replace('#', '');
+  const startScreen = Screens[hash] ? hash : 'home';
+  Router.switchTab(startScreen);
+})();
+
+// Re-draw charts on resize
+window.addEventListener('resize', () => {
+  const top = Router.getStack().slice(-1)[0];
+  if (top && top.screenId === 'trends') setTimeout(Screens.trends.drawAll, 100);
+});
+</script>
+</body>
+</html>
